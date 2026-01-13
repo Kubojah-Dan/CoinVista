@@ -15,7 +15,7 @@ app.use(helmet());
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? 'https://your-frontend-domain.com'
+    ? 'https://coinvista.onrender.com'
     : ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true
 }));
