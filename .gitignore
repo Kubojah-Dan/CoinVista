@@ -25,3 +25,7 @@ Thumbs.db
 
 # MongoDB
 data/
+
+# .md files
+*.md
+!README.md
