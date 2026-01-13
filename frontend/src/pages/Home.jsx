@@ -2,8 +2,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TrendingUp, Bell, PieChart, Shield } from "lucide-react";
 import { Button } from "../components/common/Button";
-import { ThemeToggle } from "../components/common/ThemeToggle";
-import logoSvg from "../assets/logo.svg"; // Uncommented and assuming the path is correct
 
 const Home = () => {
     const features = [
@@ -36,24 +34,6 @@ const Home = () => {
                 backgroundImage: `linear-gradient(var(--home-overlay), var(--home-overlay)), var(--home-bg-image)`
             }}
         >
-            {/* Header */}
-            <header className="container mx-auto px-6 py-6 relative z-10">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <img src={logoSvg || "/placeholder.svg"} alt="CoinVista Logo" className="w-10 h-10" />
-                        <span className="text-2xl font-bold gradient-text">CoinVista</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <ThemeToggle />
-                        <Link to="/login">
-                            <Button variant="secondary" className="bg-white/10 dark:bg-dark-100/10 backdrop-blur-md">Login</Button>
-                        </Link>
-                        <Link to="/signup">
-                            <Button>Get Started</Button>
-                        </Link>
-                    </div>
-                </div>
-            </header>
 
             {/* Hero Section */}
             <section className="container mx-auto px-6 py-20 text-center relative z-10">

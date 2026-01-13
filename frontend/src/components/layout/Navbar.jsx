@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaBars, FaTimes, FaCoins } from 'react-icons/fa';
+import { FaBars, FaTimes } from 'react-icons/fa';
+import logoSvg from '../../assets/logo.svg';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { Button } from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
@@ -27,7 +28,7 @@ const Navbar = () => {
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2 text-2xl font-bold bg-gradient-primary text-transparent bg-clip-text">
-                        <FaCoins className="text-3xl text-primary" />
+                        <img src={logoSvg} alt="CoinVista Logo" className="w-10 h-10" />
                         <span>CoinVista</span>
                     </Link>
 
