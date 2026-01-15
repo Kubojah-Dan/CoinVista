@@ -1,10 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, TrendingUp, DollarSign, Wallet } from "lucide-react";
+import { Plus, TrendingUp, DollarSign, Wallet, Search, ArrowRight, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { useAuth } from "../context/AuthContext";
+import { useCryptoData } from "../hooks/useCryptoData";
 import api from "../services/api";
-import { PriceCard } from "../components/dashboard/PriceCard";
+
 import { PortfolioChart } from "../components/dashboard/PortfolioChart";
 import { AllocationChart } from "../components/dashboard/AllocationChart";
 import { HoldingsTable } from "../components/dashboard/HoldingsTable";
@@ -16,9 +19,28 @@ const Dashboard = () => {
     const { user } = useAuth();
     const [holdings, setHoldings] = useState([]);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loadingHoldings, setLoadingHoldings] = useState(true);
 
-    // Mock data removed. Using real API.
+    // Crypto Data State
+    const [currency, setCurrency] = useState('usd');
+    const { coins, loading: coinsLoading, page, fetchCoins, nextPage, prevPage } = useCryptoData();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filteredCoins, setFilteredCoins] = useState([]);
+
+    useEffect(() => {
+        fetchCoins(1, currency);
+    }, [currency, fetchCoins]);
+
+    useEffect(() => {
+        if (searchQuery) {
+            setFilteredCoins(coins.filter(coin =>
+                coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+            ));
+        } else {
+            setFilteredCoins(coins);
+        }
+    }, [searchQuery, coins]);
 
     useEffect(() => {
         const fetchHoldings = async () => {
@@ -29,7 +51,7 @@ const Dashboard = () => {
                 console.error("Failed to fetch holdings:", error);
                 setHoldings([]);
             } finally {
-                setLoading(false);
+                setLoadingHoldings(false);
             }
         };
         fetchHoldings();
@@ -169,15 +191,92 @@ const Dashboard = () => {
                     <AllocationChart data={allocationData} />
                 </div>
 
-                {/* Live Prices */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Live Cryptocurrency Prices</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {prices.slice(0, 8).map((coin, index) => (
-                            <PriceCard key={coin.symbol} coin={coin} index={index} />
-                        ))}
+                {/* Market Overview Section */}
+                <div className="mb-8">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Top Cryptocurrencies</h2>
+
+                        <div className="flex gap-4 w-full md:w-auto">
+                            {/* Currency Filter */}
+                            <div className="join">
+                                <button
+                                    className={`btn btn-sm join-item ${currency === 'usd' ? 'btn-primary' : ''}`}
+                                    onClick={() => setCurrency('usd')}
+                                >
+                                    USD
+                                </button>
+                                <button
+                                    className={`btn btn-sm join-item ${currency === 'eur' ? 'btn-primary' : ''}`}
+                                    onClick={() => setCurrency('eur')}
+                                >
+                                    EUR
+                                </button>
+                                <button
+                                    className={`btn btn-sm join-item ${currency === 'btc' ? 'btn-primary' : ''}`}
+                                    onClick={() => setCurrency('btc')}
+                                >
+                                    BTC
+                                </button>
+                            </div>
+
+                            {/* Search Bar */}
+                            <div className="relative flex-1 md:w-64">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search coins..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="input input-bordered input-sm w-full pl-10"
+                                />
+                            </div>
+                        </div>
                     </div>
-                </motion.div>
+
+                    {coinsLoading ? (
+                        <div className="flex justify-center p-12">
+                            <span className="loading loading-spinner text-primary"></span>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                {filteredCoins.map((coin) => (
+                                    <Link to={`/coin/${coin.id}`} key={coin.id}>
+                                        <div className="glass-card p-4 hover:shadow-lg transition-all cursor-pointer bg-white dark:bg-dark-200 rounded-xl">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 dark:text-gray-100">{coin.symbol.toUpperCase()}</h3>
+                                                    <span className="text-xs text-gray-500">{coin.name}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-end">
+                                                <div className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                                    {currency === 'usd' ? '$' : currency === 'eur' ? '€' : '₿'}
+                                                    {coin.current_price.toLocaleString()}
+                                                </div>
+                                                <div className={`text-sm ${coin.price_change_percentage_24h >= 0 ? "text-success" : "text-error"}`}>
+                                                    {coin.price_change_percentage_24h.toFixed(2)}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+
+                            {/* Pagination */}
+                            <div className="flex justify-center gap-2">
+                                <button className="btn btn-sm" onClick={prevPage} disabled={page === 1}>
+                                    <ArrowLeft className="w-4 h-4" /> Previous
+                                </button>
+                                <button className="btn btn-sm">Page {page}</button>
+                                <button className="btn btn-sm" onClick={nextPage}>
+                                    Next <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
 
                 {/* Holdings Section */}
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
@@ -192,7 +291,7 @@ const Dashboard = () => {
                         </button>
                     </div>
 
-                    {loading ? (
+                    {loadingHoldings ? (
                         <div className="flex justify-center p-12">
                             <span className="loading loading-spinner text-primary"></span>
                         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { cryptoAPI } from '../services/api';
 
 export const useCryptoData = () => {
@@ -7,7 +7,7 @@ export const useCryptoData = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
-  const fetchCoins = async (pageNum = 1, currency = 'usd') => {
+  const fetchCoins = useCallback(async (pageNum = 1, currency = 'usd') => {
     try {
       setLoading(true);
       setError(null);
@@ -18,7 +18,7 @@ export const useCryptoData = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const nextPage = () => {
     const newPage = page + 1;
@@ -50,7 +50,7 @@ export const useCoinDetails = (coinId) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCoinDetails = async (id = coinId) => {
+  const fetchCoinDetails = useCallback(async (id = coinId) => {
     try {
       setLoading(true);
       setError(null);
@@ -61,13 +61,13 @@ export const useCoinDetails = (coinId) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [coinId]);
 
   useEffect(() => {
     if (coinId) {
       fetchCoinDetails();
     }
-  }, [coinId]);
+  }, [coinId, fetchCoinDetails]);
 
   return { coin, loading, error, fetchCoinDetails };
 };
@@ -77,7 +77,7 @@ export const useCoinChart = (coinId, days = 7) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchChartData = async (id = coinId, chartDays = days) => {
+  const fetchChartData = useCallback(async (id = coinId, chartDays = days) => {
     try {
       setLoading(true);
       setError(null);
@@ -88,13 +88,13 @@ export const useCoinChart = (coinId, days = 7) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [coinId, days]);
 
   useEffect(() => {
     if (coinId) {
       fetchChartData();
     }
-  }, [coinId, days]);
+  }, [coinId, days, fetchChartData]);
 
   return { chartData, loading, error, fetchChartData };
 };
@@ -104,7 +104,7 @@ export const useWatchlist = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchWatchlist = async () => {
+  const fetchWatchlist = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -115,7 +115,7 @@ export const useWatchlist = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const addToWatchlist = async (coinId) => {
     try {
@@ -145,7 +145,7 @@ export const useWatchlist = () => {
 
   useEffect(() => {
     fetchWatchlist();
-  }, []);
+  }, [fetchWatchlist]);
 
   return {
     watchlist,
@@ -162,7 +162,7 @@ export const useAlerts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -173,7 +173,7 @@ export const useAlerts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const createAlert = async (alertData) => {
     try {
@@ -203,7 +203,7 @@ export const useAlerts = () => {
 
   useEffect(() => {
     fetchAlerts();
-  }, []);
+  }, [fetchAlerts]);
 
   return {
     alerts,

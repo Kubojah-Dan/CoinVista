@@ -20,6 +20,13 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    watchlist: [{
+        type: String // Coin IDs
+    }],
+    alerts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Alert'
+    }],
 });
 
 // Method to check password

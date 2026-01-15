@@ -10,9 +10,8 @@ exports.getTopCoins = async (req, res) => {
     // Get user's preferred currency if authenticated
     let preferredCurrency = currency;
     if (req.user) {
-      const user = await User.findById(req.user.userId);
-      if (user && user.preferences.currency) {
-        preferredCurrency = user.preferences.currency;
+      if (req.user.preferences && req.user.preferences.currency) {
+        preferredCurrency = req.user.preferences.currency;
       }
     }
 
@@ -45,9 +44,8 @@ exports.getCoinChart = async (req, res) => {
     // Get user's preferred currency if authenticated
     let preferredCurrency = currency;
     if (req.user) {
-      const user = await User.findById(req.user.userId);
-      if (user && user.preferences.currency) {
-        preferredCurrency = user.preferences.currency;
+      if (req.user.preferences && req.user.preferences.currency) {
+        preferredCurrency = req.user.preferences.currency;
       }
     }
 
@@ -101,7 +99,8 @@ exports.getGlobalData = async (req, res) => {
 // Get user's watchlist
 exports.getWatchlist = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
+    console.log('getWatchlist: req.user is', req.user);
+    const user = req.user; // User is already attached by auth middleware
     if (!user.watchlist || user.watchlist.length === 0) {
       return res.json({ watchlist: [] });
     }
@@ -123,7 +122,15 @@ exports.addToWatchlist = async (req, res) => {
       return res.status(400).json({ message: 'Coin ID is required' });
     }
 
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
+    if (!user) {
+      console.error('addToWatchlist: req.user is missing!');
+      return res.status(401).json({ message: 'User not authenticated context missing' });
+    }
+    if (!user.watchlist) {
+      // Initialize if missing (defensive)
+      user.watchlist = [];
+    }
     if (user.watchlist.includes(coinId)) {
       return res.status(400).json({ message: 'Coin already in watchlist' });
     }
@@ -145,7 +152,7 @@ exports.removeFromWatchlist = async (req, res) => {
   try {
     const { coinId } = req.params;
 
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
     user.watchlist = user.watchlist.filter(id => id !== coinId);
     await user.save();
 
@@ -161,25 +168,24 @@ exports.removeFromWatchlist = async (req, res) => {
 // Create alert
 exports.createAlert = async (req, res) => {
   try {
-    const { coinId, coinName, coinSymbol, condition, targetPrice } = req.body;
+    console.log('createAlert body:', req.body);
+    const { symbol, targetPrice, direction } = req.body;
 
-    if (!coinId || !coinName || !coinSymbol || !condition || !targetPrice) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    if (!symbol || !direction || !targetPrice) {
+      return res.status(400).json({ message: 'Missing required fields: symbol, direction, targetPrice' });
     }
 
     const alert = new Alert({
-      user: req.user.userId,
-      coinId,
-      coinName,
-      coinSymbol,
-      condition,
-      targetPrice
+      user: req.user._id,
+      symbol,
+      targetPrice,
+      direction,
     });
 
     await alert.save();
 
     // Add alert to user's alerts array
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
     user.alerts.push(alert._id);
     await user.save();
 
@@ -193,7 +199,7 @@ exports.createAlert = async (req, res) => {
 // Get user's alerts
 exports.getAlerts = async (req, res) => {
   try {
-    const alerts = await Alert.find({ user: req.user.userId })
+    const alerts = await Alert.find({ user: req.user._id })
       .sort({ createdAt: -1 });
     res.json({ alerts });
   } catch (error) {
@@ -209,7 +215,7 @@ exports.deleteAlert = async (req, res) => {
 
     const alert = await Alert.findOneAndDelete({
       _id: alertId,
-      user: req.user.userId
+      user: req.user._id
     });
 
     if (!alert) {
@@ -217,7 +223,7 @@ exports.deleteAlert = async (req, res) => {
     }
 
     // Remove alert from user's alerts array
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
     user.alerts = user.alerts.filter(id => id.toString() !== alertId);
     await user.save();
 

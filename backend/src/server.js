@@ -92,6 +92,7 @@ mongoose
 app.use('/api/auth', authRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/holdings', holdingRoutes);
+app.use('/api/crypto', require('./routes/cryptoRoutes'));
 
 // Basic health check route
 app.get('/', (req, res) => {

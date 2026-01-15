@@ -12,6 +12,7 @@ import Alerts from './pages/Alerts';
 import Markets from './pages/Markets';
 import Trending from './pages/Trending';
 import Watchlist from './pages/Watchlist';
+import CoinDetail from './pages/CoinDetail';
 
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -64,6 +65,14 @@ function App() {
                                     element={
                                         <ProtectedRoute>
                                             <Watchlist />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/coin/:id"
+                                    element={
+                                        <ProtectedRoute>
+                                            <CoinDetail />
                                         </ProtectedRoute>
                                     }
                                 />

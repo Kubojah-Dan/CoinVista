@@ -6,12 +6,12 @@ import { subscribeToCoin, unsubscribeFromCoin } from '../services/socket';
 import { toast } from 'react-toastify';
 import PriceChart from '../components/PriceChart';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { 
-  ArrowLeft, 
-  Plus, 
-  Minus, 
-  Bell, 
-  TrendingUp, 
+import {
+  ArrowLeft,
+  Plus,
+  Minus,
+  Bell,
+  TrendingUp,
   TrendingDown,
   Activity,
   DollarSign,
@@ -27,7 +27,7 @@ const CoinDetail = () => {
   const { chartData, loading: chartLoading, fetchChartData } = useCoinChart(id);
   const { watchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
   const { createAlert } = useAlerts();
-  
+
   const [selectedDays, setSelectedDays] = useState(7);
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [alertData, setAlertData] = useState({
@@ -74,10 +74,8 @@ const CoinDetail = () => {
     }
 
     const result = await createAlert({
-      coinId: id,
-      coinName: coin.name,
-      coinSymbol: coin.symbol,
-      condition: alertData.condition,
+      symbol: coin.symbol.toUpperCase(),
+      direction: alertData.condition,
       targetPrice: parseFloat(alertData.targetPrice)
     });
 
@@ -134,19 +132,19 @@ const CoinDetail = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <button 
+          <button
             className="btn btn-ghost btn-sm mb-4"
             onClick={() => window.history.back()}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </button>
-          
+
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <img 
-                src={coin.image?.large} 
-                alt={coin.name} 
+              <img
+                src={coin.image?.large}
+                alt={coin.name}
                 className="w-16 h-16 rounded-full"
               />
               <div>
@@ -187,7 +185,7 @@ const CoinDetail = () => {
               </button>
             ))}
           </div>
-          <PriceChart chartData={chartData} days={selectedDays} />
+          <PriceChart history={chartData?.prices?.map(item => item[1]) || []} coinName={coin.name} />
         </div>
 
         {/* Market Stats */}
@@ -199,7 +197,7 @@ const CoinDetail = () => {
                 <DollarSign className="w-6 h-6" />
                 Price Information
               </h2>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm opacity-70">Current Price</div>
@@ -241,7 +239,7 @@ const CoinDetail = () => {
                 <BarChart3 className="w-6 h-6" />
                 Market Statistics
               </h2>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm opacity-70">Market Cap</div>
@@ -285,7 +283,7 @@ const CoinDetail = () => {
               <Activity className="w-6 h-6" />
               About {coin.name}
             </h2>
-            <div 
+            <div
               className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: coin.description?.en || 'No description available.' }}
             />
@@ -300,9 +298,9 @@ const CoinDetail = () => {
                 <Globe className="w-6 h-6" />
                 Official Links
               </h2>
-              <a 
-                href={coin.links.homepage[0]} 
-                target="_blank" 
+              <a
+                href={coin.links.homepage[0]}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="link link-primary"
               >
@@ -321,12 +319,12 @@ const CoinDetail = () => {
               <Bell className="w-5 h-5 inline mr-2" />
               Set Price Alert for {coin.name}
             </h3>
-            
+
             <div className="form-control mb-4">
               <label className="label">
                 <span className="label-text">Condition</span>
               </label>
-              <select 
+              <select
                 className="select select-bordered"
                 value={alertData.condition}
                 onChange={(e) => setAlertData({ ...alertData, condition: e.target.value })}
@@ -340,7 +338,7 @@ const CoinDetail = () => {
               <label className="label">
                 <span className="label-text">Target Price (USD)</span>
               </label>
-              <input 
+              <input
                 type="number"
                 step="any"
                 className="input input-bordered"
@@ -354,13 +352,13 @@ const CoinDetail = () => {
             </div>
 
             <div className="modal-action">
-              <button 
+              <button
                 className="btn"
                 onClick={() => setShowAlertModal(false)}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="btn btn-primary"
                 onClick={handleCreateAlert}
               >
