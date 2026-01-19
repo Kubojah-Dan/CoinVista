@@ -12,7 +12,15 @@ export const useCryptoData = () => {
       setLoading(true);
       setError(null);
       const response = await cryptoAPI.getTopCoins({ page: pageNum, perPage: 50, currency });
-      setCoins(response.data.coins);
+
+      // sanitize numeric fields so frontend doesn't crash when API returns null
+      const coinsData = (response.data.coins || []).map(c => ({
+        ...c,
+        current_price: c.current_price ?? 0,
+        price_change_percentage_24h: c.price_change_percentage_24h ?? 0,
+      }));
+
+      setCoins(coinsData);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch cryptocurrency data');
     } finally {
