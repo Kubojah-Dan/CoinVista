@@ -74,7 +74,7 @@ const CoinDetail = () => {
     }
 
     const result = await createAlert({
-      symbol: coin.symbol.toUpperCase(),
+      symbol: (coin?.symbol || "").toUpperCase(),
       direction: alertData.condition,
       targetPrice: parseFloat(alertData.targetPrice)
     });
@@ -123,8 +123,9 @@ const CoinDetail = () => {
     return <div>Coin not found</div>;
   }
 
-  const marketData = coin.market_data;
-  const priceChange24h = marketData?.price_change_percentage_24h || 0;
+  const marketData = coin.market_data ?? {};
+  // Defensive numeric handling:
+  const priceChange24h = Number(marketData?.price_change_percentage_24h ?? 0);
   const isPositive = priceChange24h >= 0;
 
   return (
@@ -202,7 +203,7 @@ const CoinDetail = () => {
                 <div>
                   <div className="text-sm opacity-70">Current Price</div>
                   <div className="text-2xl font-bold">
-                    {formatCurrency(marketData?.current_price?.usd)}
+                    {formatCurrency(Number(marketData?.current_price?.usd ?? 0))}
                   </div>
                 </div>
                 <div>
@@ -214,19 +215,19 @@ const CoinDetail = () => {
                 </div>
                 <div>
                   <div className="text-sm opacity-70">24h High</div>
-                  <div className="font-semibold">{formatCurrency(marketData?.high_24h?.usd)}</div>
+                  <div className="font-semibold">{formatCurrency(Number(marketData?.high_24h?.usd ?? 0))}</div>
                 </div>
                 <div>
                   <div className="text-sm opacity-70">24h Low</div>
-                  <div className="font-semibold">{formatCurrency(marketData?.low_24h?.usd)}</div>
+                  <div className="font-semibold">{formatCurrency(Number(marketData?.low_24h?.usd ?? 0))}</div>
                 </div>
                 <div>
                   <div className="text-sm opacity-70">All Time High</div>
-                  <div className="font-semibold">{formatCurrency(marketData?.ath?.usd)}</div>
+                  <div className="font-semibold">{formatCurrency(Number(marketData?.ath?.usd ?? 0))}</div>
                 </div>
                 <div>
                   <div className="text-sm opacity-70">All Time Low</div>
-                  <div className="font-semibold">{formatCurrency(marketData?.atl?.usd)}</div>
+                  <div className="font-semibold">{formatCurrency(Number(marketData?.atl?.usd ?? 0))}</div>
                 </div>
               </div>
             </div>
@@ -243,7 +244,7 @@ const CoinDetail = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm opacity-70">Market Cap</div>
-                  <div className="font-semibold">{formatLargeNumber(marketData?.market_cap?.usd)}</div>
+                  <div className="font-semibold">{formatLargeNumber(Number(marketData?.market_cap?.usd ?? 0))}</div>
                 </div>
                 <div>
                   <div className="text-sm opacity-70">Market Cap Rank</div>
@@ -251,24 +252,24 @@ const CoinDetail = () => {
                 </div>
                 <div>
                   <div className="text-sm opacity-70">24h Volume</div>
-                  <div className="font-semibold">{formatLargeNumber(marketData?.total_volume?.usd)}</div>
+                  <div className="font-semibold">{formatLargeNumber(Number(marketData?.total_volume?.usd ?? 0))}</div>
                 </div>
                 <div>
                   <div className="text-sm opacity-70">Circulating Supply</div>
                   <div className="font-semibold">
-                    {new Intl.NumberFormat('en-US').format(marketData?.circulating_supply)} {coin.symbol.toUpperCase()}
+                    {new Intl.NumberFormat('en-US').format(Number(marketData?.circulating_supply ?? 0))} {coin.symbol?.toUpperCase()}
                   </div>
                 </div>
                 <div>
                   <div className="text-sm opacity-70">Total Supply</div>
                   <div className="font-semibold">
-                    {marketData?.total_supply ? new Intl.NumberFormat('en-US').format(marketData.total_supply) : 'N/A'} {coin.symbol.toUpperCase()}
+                    {marketData?.total_supply ? new Intl.NumberFormat('en-US').format(Number(marketData.total_supply)) : 'N/A'} {coin.symbol?.toUpperCase()}
                   </div>
                 </div>
                 <div>
                   <div className="text-sm opacity-70">Max Supply</div>
                   <div className="font-semibold">
-                    {marketData?.max_supply ? new Intl.NumberFormat('en-US').format(marketData.max_supply) : '∞'} {coin.symbol.toUpperCase()}
+                    {marketData?.max_supply ? new Intl.NumberFormat('en-US').format(Number(marketData.max_supply)) : '∞'} {coin.symbol?.toUpperCase()}
                   </div>
                 </div>
               </div>
@@ -347,7 +348,7 @@ const CoinDetail = () => {
                 onChange={(e) => setAlertData({ ...alertData, targetPrice: e.target.value })}
               />
               <label className="label">
-                <span className="label-text-alt">Current price: {formatCurrency(marketData?.current_price?.usd)}</span>
+                <span className="label-text-alt">Current price: {formatCurrency(Number(marketData?.current_price?.usd ?? 0))}</span>
               </label>
             </div>
 
