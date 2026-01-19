@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, TrendingUp, DollarSign, Wallet, Search, ArrowRight, ArrowLeft } from "lucide-react";
@@ -34,8 +33,8 @@ const Dashboard = () => {
     useEffect(() => {
         if (searchQuery) {
             setFilteredCoins(coins.filter(coin =>
-                coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+                (coin.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (coin.symbol || "").toLowerCase().includes(searchQuery.toLowerCase())
             ));
         } else {
             setFilteredCoins(coins);
@@ -85,14 +84,14 @@ const Dashboard = () => {
         return holdings.reduce((total, holding) => {
             const priceData = prices.find((p) => p.symbol === holding.symbol);
             // Use purchase price as fallback if socket price not yet available
-            const price = priceData ? priceData.currentPrice : holding.purchasePrice;
-            return total + (holding.amount * price);
+            const price = Number(priceData?.currentPrice ?? holding.purchasePrice ?? 0);
+            return total + (Number(holding.amount ?? 0) * price);
         }, 0);
     };
 
     const calculateTotalInvested = () => {
         return holdings.reduce((total, holding) => {
-            return total + holding.amount * holding.purchasePrice;
+            return total + Number(holding.amount ?? 0) * Number(holding.purchasePrice ?? 0);
         }, 0);
     };
 
@@ -114,9 +113,9 @@ const Dashboard = () => {
 
     const allocationData = holdings.map((holding) => {
         const priceData = prices.find((p) => p.symbol === holding.symbol);
-        const price = priceData ? priceData.currentPrice : holding.purchasePrice;
-        const value = holding.amount * price;
-        const percentage = portfolioValue > 0 ? ((value / portfolioValue) * 100).toFixed(1) : 0;
+        const price = Number(priceData?.currentPrice ?? holding.purchasePrice ?? 0);
+        const value = Number(holding.amount ?? 0) * price;
+        const percentage = portfolioValue > 0 ? Number(((value / portfolioValue) * 100).toFixed(1)) : 0;
         return {
             name: holding.symbol,
             value: value,
@@ -246,17 +245,17 @@ const Dashboard = () => {
                                             <div className="flex items-center gap-3 mb-3">
                                                 <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
                                                 <div>
-                                                    <h3 className="font-bold text-gray-900 dark:text-gray-100">{coin.symbol.toUpperCase()}</h3>
+                                                    <h3 className="font-bold text-gray-900 dark:text-gray-100">{(coin.symbol || "").toUpperCase()}</h3>
                                                     <span className="text-xs text-gray-500">{coin.name}</span>
                                                 </div>
                                             </div>
                                             <div className="flex justify-between items-end">
                                                 <div className="font-bold text-lg text-gray-900 dark:text-gray-100">
                                                     {currency === 'usd' ? '$' : currency === 'eur' ? '€' : '₿'}
-                                                    {coin.current_price.toLocaleString()}
+                                                    {Number(coin.current_price ?? 0).toLocaleString()}
                                                 </div>
-                                                <div className={`text-sm ${coin.price_change_percentage_24h >= 0 ? "text-success" : "text-error"}`}>
-                                                    {coin.price_change_percentage_24h.toFixed(2)}%
+                                                <div className={`text-sm ${((coin.price_change_percentage_24h ?? 0) >= 0) ? "text-success" : "text-error"}`}>
+                                                    {Number(coin.price_change_percentage_24h ?? 0).toFixed(2)}%
                                                 </div>
                                             </div>
                                         </div>
