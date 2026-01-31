@@ -33,6 +33,7 @@ A modern, full-stack cryptocurrency dashboard built with React, Node.js, Express
 -   Socket.IO Client
 -   React Toastify
 -   Lucide React Icons
+
 <br/>
 
 ### Backend
@@ -46,6 +47,7 @@ A modern, full-stack cryptocurrency dashboard built with React, Node.js, Express
 -   CoinGecko API
 -   Helmet (Security)
 -   Express Rate Limiting
+
 <br/>
 
 ## 📋 Prerequisites
