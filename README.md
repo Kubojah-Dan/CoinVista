@@ -4,6 +4,8 @@ A modern, full-stack cryptocurrency dashboard built with React, Node.js, Express
 
 ![CoinVista](https://img.shields.io/badge/version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
+<br/>
+
 ## ✨ Features
 
 -   📊 **Real-time Cryptocurrency Data**: Live prices and market data from CoinGecko API
@@ -15,6 +17,7 @@ A modern, full-stack cryptocurrency dashboard built with React, Node.js, Express
 -   🔐 **Authentication**: Secure user authentication with JWT
 -   📱 **Responsive Design**: Works seamlessly on desktop and mobile
 -   🔄 **Real-time Updates**: Socket.IO for live price updates
+<br/>
 
 ## 🛠️ Tech Stack
 
@@ -30,6 +33,7 @@ A modern, full-stack cryptocurrency dashboard built with React, Node.js, Express
 -   Socket.IO Client
 -   React Toastify
 -   Lucide React Icons
+<br/>
 
 ### Backend
 
@@ -42,6 +46,7 @@ A modern, full-stack cryptocurrency dashboard built with React, Node.js, Express
 -   CoinGecko API
 -   Helmet (Security)
 -   Express Rate Limiting
+<br/>
 
 ## 📋 Prerequisites
 
@@ -51,8 +56,8 @@ Before you begin, ensure you have the following installed:
 -   MongoDB (local or Atlas)
 -   npm or yarn
 -   CoinGecko API Key (get free at [coingecko.com](https://www.coingecko.com/en/api))
-
-## 🚀 Installation
+<br/>
+  ## 🚀 Installation
 
 ### 1\. Clone the Repository
 
@@ -176,6 +181,8 @@ coinvista/
 ├── README.md
 └── .gitignore
 ```
+
+<br/>
 
 ## 🔑 Getting CoinGecko API Key
 
