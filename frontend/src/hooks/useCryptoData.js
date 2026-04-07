@@ -6,21 +6,22 @@ export const useCryptoData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [currency, setCurrency] = useState('usd');
 
   const fetchCoins = useCallback(async (pageNum = 1, currency = 'usd') => {
     try {
       setLoading(true);
       setError(null);
       const response = await cryptoAPI.getTopCoins({ page: pageNum, perPage: 50, currency });
-
       // sanitize numeric fields so frontend doesn't crash when API returns null
-      const coinsData = (response.data.coins || []).map(c => ({
+      const coinsData = (response.data?.coins || []).map(c => ({
         ...c,
         current_price: c.current_price ?? 0,
         price_change_percentage_24h: c.price_change_percentage_24h ?? 0,
       }));
 
       setCoins(coinsData);
+      setCurrency(currency);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch cryptocurrency data');
     } finally {
@@ -31,14 +32,14 @@ export const useCryptoData = () => {
   const nextPage = () => {
     const newPage = page + 1;
     setPage(newPage);
-    fetchCoins(newPage);
+    fetchCoins(newPage, currency);
   };
 
   const prevPage = () => {
     if (page > 1) {
       const newPage = page - 1;
       setPage(newPage);
-      fetchCoins(newPage);
+      fetchCoins(newPage, currency);
     }
   };
 
@@ -63,7 +64,7 @@ export const useCoinDetails = (coinId) => {
       setLoading(true);
       setError(null);
       const response = await cryptoAPI.getCoinDetails(id);
-      setCoin(response.data.coin);
+      setCoin(response.data?.coin || null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch coin details');
     } finally {
@@ -90,7 +91,7 @@ export const useCoinChart = (coinId, days = 7) => {
       setLoading(true);
       setError(null);
       const response = await cryptoAPI.getCoinChart(id, { days: chartDays });
-      setChartData(response.data.chartData);
+      setChartData(response.data?.chartData || null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch chart data');
     } finally {
@@ -117,7 +118,7 @@ export const useWatchlist = () => {
       setLoading(true);
       setError(null);
       const response = await cryptoAPI.getWatchlist();
-      setWatchlist(response.data.watchlist);
+      setWatchlist(response.data?.watchlist || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch watchlist');
     } finally {
@@ -169,13 +170,14 @@ export const useAlerts = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const getAlertId = (alert) => alert?.id || alert?._id;
 
   const fetchAlerts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await cryptoAPI.getAlerts();
-      setAlerts(response.data.alerts);
+      setAlerts(response.data?.alerts || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch alerts');
     } finally {
@@ -199,7 +201,7 @@ export const useAlerts = () => {
   const deleteAlert = async (alertId) => {
     try {
       await cryptoAPI.deleteAlert(alertId);
-      setAlerts(alerts.filter(alert => alert._id !== alertId));
+      setAlerts(alerts.filter(alert => getAlertId(alert) !== alertId));
       return { success: true };
     } catch (err) {
       return {

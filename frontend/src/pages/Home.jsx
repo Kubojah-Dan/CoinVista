@@ -1,29 +1,34 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { TrendingUp, Bell, PieChart, Shield } from "lucide-react";
+import { Bell, Brain, PieChart, Shield, TrendingUp } from "lucide-react";
 import { Button } from "../components/common/Button";
 
 const Home = () => {
     const features = [
         {
             icon: TrendingUp,
-            title: "Real-time Tracking",
-            description: "Monitor your cryptocurrency portfolio with live price updates via WebSockets",
+            title: "Live Market Monitoring",
+            description: "Track leading cryptocurrencies with real-time data, comparison charts, and alert-ready market views.",
         },
         {
             icon: Bell,
-            title: "Price Alerts",
-            description: "Set custom price alerts and get notified when your targets are reached",
+            title: "Background Alerts",
+            description: "Run server-side alerts that keep checking prices even when you are offline.",
         },
         {
             icon: PieChart,
-            title: "Analytics Dashboard",
-            description: "Visualize your portfolio performance with interactive charts and insights",
+            title: "Portfolio Intelligence",
+            description: "Measure allocation, PnL, diversification, and export-ready portfolio reports from one workspace.",
+        },
+        {
+            icon: Brain,
+            title: "AI-Flavored Signals",
+            description: "Explore baseline forecasting, anomaly detection, and headline sentiment designed for recruiter demos.",
         },
         {
             icon: Shield,
-            title: "Secure & Private",
-            description: "Your data is encrypted and secure with JWT authentication",
+            title: "Secure by Design",
+            description: "Refresh-token sessions, optional 2FA, privacy mode, and social login plumbing make the app feel production-aware.",
         },
     ];
 
@@ -39,12 +44,13 @@ const Home = () => {
             <section className="container mx-auto px-6 py-20 text-center relative z-10">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                     <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-gray-100">
-                        Track Your Crypto
+                        Research Crypto
                         <br />
-                        <span className="gradient-text">Portfolio in Real-time</span>
+                        <span className="gradient-text">Like a Product Team</span>
                     </h1>
                     <p className="text-xl text-gray-700 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-                        The most advanced cryptocurrency portfolio tracker with live price updates, analytics, and smart alerts.
+                        CoinVista is a full-stack crypto intelligence workspace that combines live markets, portfolio analytics,
+                        paper trading, alert automation, and machine-learning-inspired insight panels in one polished project.
                     </p>
                     <div className="flex items-center justify-center gap-4">
                         <Link to="/signup">
@@ -61,7 +67,7 @@ const Home = () => {
 
             {/* Features Grid */}
             <section className="container mx-auto px-6 py-20 relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     {features.map((feature, index) => (
                         <motion.div
                             key={index}
@@ -91,10 +97,10 @@ const Home = () => {
                     className="glass-card p-12 max-w-3xl mx-auto bg-white/40 dark:bg-dark-200/40 backdrop-blur-2xl rounded-3xl"
                 >
                     <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-                        Ready to Master Your Crypto Portfolio?
+                        Ready to Ship a Stronger Portfolio Project?
                     </h2>
                     <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
-                        Join thousands of crypto investors tracking their portfolios with CoinVista
+                        Build watchlists, simulator trades, secure sessions, and recruiter-friendly analytics from day one.
                     </p>
                     <Link to="/signup">
                         <Button className="text-lg px-8 py-4">Create Free Account</Button>

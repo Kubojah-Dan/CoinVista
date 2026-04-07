@@ -6,6 +6,7 @@ import { Input } from "../common/Input";
 
 export const AddHoldingModal = ({ onClose, onSubmit, prices = [] }) => {
     const [formData, setFormData] = useState({
+        coinId: "",
         symbol: "",
         name: "",
         amount: "",
@@ -15,29 +16,52 @@ export const AddHoldingModal = ({ onClose, onSubmit, prices = [] }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData((prev) => {
+            const next = { ...prev, [name]: value };
 
-        // Auto-fill name when symbol is selected
-        if (name === "symbol") {
-            const coin = prices.find((p) => p.symbol.toUpperCase() === value.toUpperCase());
-            if (coin) {
-                setFormData((prev) => ({ ...prev, name: coin.name, purchasePrice: coin.currentPrice.toString() }));
+            if (name === "symbol") {
+                const coin = prices.find((p) => p.symbol?.toUpperCase() === value.toUpperCase());
+                if (coin) {
+                    const purchasePrice = coin.currentPrice ?? coin.current_price ?? "";
+                    next.coinId = coin.id || "";
+                    next.symbol = coin.symbol?.toUpperCase() || value.toUpperCase();
+                    next.name = coin.name || "";
+                    if (!prev.purchasePrice) {
+                        next.purchasePrice = purchasePrice.toString();
+                    }
+                } else {
+                    next.coinId = "";
+                }
             }
-        }
+
+            return next;
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
-        await onSubmit({
-            symbol: formData.symbol.toUpperCase(),
-            name: formData.name,
-            amount: Number.parseFloat(formData.amount),
-            purchasePrice: Number.parseFloat(formData.purchasePrice),
-        });
+        const amount = Number.parseFloat(formData.amount);
+        const purchasePrice = Number.parseFloat(formData.purchasePrice);
 
-        setLoading(false);
+        if (!formData.symbol || !Number.isFinite(amount) || amount <= 0 || !Number.isFinite(purchasePrice) || purchasePrice <= 0) {
+            window.alert("Please select a coin and enter valid positive values for amount and purchase price.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            await onSubmit({
+                coinId: formData.coinId,
+                symbol: formData.symbol.toUpperCase(),
+                name: formData.name,
+                amount,
+                purchasePrice,
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -71,7 +95,7 @@ export const AddHoldingModal = ({ onClose, onSubmit, prices = [] }) => {
                             >
                                 <option value="">Select cryptocurrency</option>
                                 {prices.map((coin) => (
-                                    <option key={coin.symbol} value={coin.symbol}>
+                                    <option key={`${coin.id || coin.symbol}`} value={coin.symbol}>
                                         {coin.name} ({coin.symbol})
                                     </option>
                                 ))}
@@ -104,7 +128,11 @@ export const AddHoldingModal = ({ onClose, onSubmit, prices = [] }) => {
                             <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={loading} className="flex-1">
+                            <Button
+                                type="submit"
+                                disabled={loading || !formData.symbol || !formData.amount || !formData.purchasePrice}
+                                className="flex-1"
+                            >
                                 {loading ? "Adding..." : "Add Holding"}
                             </Button>
                         </div>

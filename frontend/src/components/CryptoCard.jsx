@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { formatPercentage, toSafeNumber } from '../utils/format';
 
 ChartJS.register(
   CategoryScale,
@@ -22,14 +23,15 @@ ChartJS.register(
 );
 
 const CryptoCard = ({ coin }) => {
-  const priceChangeColor = coin.price_change_percentage_24h > 0 ? 'text-success' : 'text-error';
+  const priceChange24h = toSafeNumber(coin.price_change_percentage_24h);
+  const priceChangeColor = priceChange24h > 0 ? 'text-success' : 'text-error';
 
   const chartData = {
     labels: coin.sparkline_in_7d.price.map((_, i) => i),
     datasets: [
       {
         data: coin.sparkline_in_7d.price,
-        borderColor: coin.price_change_percentage_24h > 0 ? '#10B981' : '#EF4444',
+        borderColor: priceChange24h > 0 ? '#10B981' : '#EF4444',
         borderWidth: 2,
         pointRadius: 0,
         tension: 0.4,
@@ -61,9 +63,9 @@ const CryptoCard = ({ coin }) => {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-lg font-bold">${coin.current_price.toLocaleString()}</div>
+            <div className="text-lg font-bold">${toSafeNumber(coin.current_price).toLocaleString()}</div>
             <div className={`text-sm ${priceChangeColor}`}>
-              {coin.price_change_percentage_24h.toFixed(2)}%
+              {formatPercentage(priceChange24h)}
             </div>
           </div>
         </div>

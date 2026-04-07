@@ -1,11 +1,9 @@
-import axios from 'axios';
-
-const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3';
+import { cryptoAPI } from './api';
 
 const cryptoService = {
     getTrending: async () => {
         try {
-            const response = await axios.get(`${COINGECKO_API_URL}/search/trending`);
+            const response = await cryptoAPI.getTrendingCoins();
             return response.data;
         } catch (error) {
             console.error('Error fetching trending coins:', error);
@@ -15,17 +13,8 @@ const cryptoService = {
 
     getMarketData: async (currency = 'usd', order = 'market_cap_desc', perPage = 10, page = 1) => {
         try {
-            const response = await axios.get(`${COINGECKO_API_URL}/coins/markets`, {
-                params: {
-                    vs_currency: currency,
-                    order: order,
-                    per_page: perPage,
-                    page: page,
-                    sparkline: true,
-                    price_change_percentage: '1h,24h,7d'
-                }
-            });
-            return response.data;
+            const response = await cryptoAPI.getTopCoins({ page, perPage, currency });
+            return response.data?.coins || [];
         } catch (error) {
             console.error('Error fetching market data:', error);
             throw error;
@@ -34,17 +23,8 @@ const cryptoService = {
 
     getCoinDetails: async (id) => {
         try {
-            const response = await axios.get(`${COINGECKO_API_URL}/coins/${id}`, {
-                params: {
-                    localization: false,
-                    tickers: false,
-                    market_data: true,
-                    community_data: false,
-                    developer_data: false,
-                    sparkline: true
-                }
-            });
-            return response.data;
+            const response = await cryptoAPI.getCoinDetails(id);
+            return response.data?.coin || null;
         } catch (error) {
             console.error('Error fetching coin details:', error);
             throw error;

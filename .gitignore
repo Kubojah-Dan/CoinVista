@@ -6,6 +6,7 @@ node_modules/
 .env.local
 .env.development
 .env.production
+.env.example
 
 # Build outputs
 dist/
@@ -25,7 +26,38 @@ Thumbs.db
 
 # MongoDB
 data/
+backend2/src/main/resources/application.properties
+backend2/target/classes/application.properties
 
-# .md files
-*.md
-!README.md
+# Maven / Java build
+/backend2/target/
+/backend2/*.jar
+.mvn/
+
+# IDE / editor temp
+*.iml
+.classpath
+.project
+.settings/
+out/
+
+# Additional logs and temp files
+logs/
+*.log
+npm-debug.log*
+yarn-error.log
+pnpm-debug.log*
+
+# Frontend build / caches
+/frontend/build/
+/frontend/.cache/
+
+# Docker / local compose overrides
+docker-compose.override.yml
+.env.docker
+
+# Coverage
+coverage/
+
+# Secrets
+secrets/

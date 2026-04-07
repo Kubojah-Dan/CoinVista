@@ -265,4 +265,5 @@ If you have any questions or issues, please open an issue on GitHub.
 
 * * *
 
-Made with ❤️ by the CoinVista Team
+<<<<<<< HEAD
+Made with ❤️ by Kuboja Daniel

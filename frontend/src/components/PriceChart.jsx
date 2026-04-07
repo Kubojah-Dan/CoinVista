@@ -23,7 +23,7 @@ ChartJS.register(
   Filler
 );
 
-const PriceChart = ({ history, coinName = 'Bitcoin' }) => {
+const PriceChart = ({ history, coinName = 'Bitcoin', comparisonHistory = [], comparisonName = '' }) => {
   // Determine color based on trend
   const isUp = history.length > 0 && history[history.length - 1] >= history[0];
   const color = isUp ? '#10B981' : '#EF4444';
@@ -42,6 +42,21 @@ const PriceChart = ({ history, coinName = 'Bitcoin' }) => {
         pointRadius: 0,
         hoverPointRadius: 4,
       },
+      ...(comparisonHistory.length > 0
+        ? [
+            {
+              fill: false,
+              label: comparisonName,
+              data: comparisonHistory,
+              borderColor: '#3B82F6',
+              backgroundColor: 'transparent',
+              tension: 0.35,
+              pointRadius: 0,
+              hoverPointRadius: 4,
+              borderDash: [6, 4],
+            },
+          ]
+        : []),
     ],
   };
 
@@ -50,7 +65,7 @@ const PriceChart = ({ history, coinName = 'Bitcoin' }) => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: comparisonHistory.length > 0,
       },
       tooltip: {
         mode: 'index',
@@ -86,6 +101,7 @@ const PriceChart = ({ history, coinName = 'Bitcoin' }) => {
     <div className="w-full h-[400px] p-4 bg-base-100 rounded-xl shadow-lg">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold">{coinName} Price Chart</h3>
+        {comparisonName && <span className="badge badge-outline">{coinName} vs {comparisonName}</span>}
       </div>
       <div className="h-[300px]">
         <Line data={data} options={options} />

@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+
+  # ── Spring Boot Backend ───────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend2
+      dockerfile: Dockerfile
+    container_name: coinvista_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - COINGECKO_API_KEY=${COINGECKO_API_KEY}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - API_BASE_URL=${API_BASE_URL:-http://localhost:5000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      - CRYPTOPANIC_API_KEY=${CRYPTOPANIC_API_KEY}
+      - GNEWS_API_KEY=${GNEWS_API_KEY}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - MAIL_FROM=${MAIL_FROM}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - FACEBOOK_CLIENT_ID=${FACEBOOK_CLIENT_ID}
+      - FACEBOOK_CLIENT_SECRET=${FACEBOOK_CLIENT_SECRET}
+      - FACEBOOK_OAUTH_VERSION=${FACEBOOK_OAUTH_VERSION:-v20.0}
+    restart: unless-stopped
+
+  # ── Frontend (React) ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: coinvista_frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:5000/api}
+      - REACT_APP_SOCKET_URL=${REACT_APP_SOCKET_URL:-http://localhost:5000}
+      - REACT_APP_MOONPAY_URL=${REACT_APP_MOONPAY_URL}
+      - REACT_APP_TRANSAK_URL=${REACT_APP_TRANSAK_URL}
+    depends_on:
+      - backend
+    restart: unless-stopped

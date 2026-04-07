@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { FaSearch } from 'react-icons/fa';
+import { cryptoAPI } from '../services/api';
+import { formatPercentage, toSafeNumber } from '../utils/format';
 
 const Markets = () => {
     const [coins, setCoins] = useState([]);
@@ -10,18 +11,8 @@ const Markets = () => {
     useEffect(() => {
         const fetchMarkets = async () => {
             try {
-                // Using Coingecko public API directly for frontend demo to ensure data
-                // In production, should proxy through backend
-                const { data } = await axios.get('https://api.coingecko.com/api/v3/coins/markets', {
-                    params: {
-                        vs_currency: 'usd',
-                        order: 'market_cap_desc',
-                        per_page: 50,
-                        page: 1,
-                        sparkline: false
-                    }
-                });
-                setCoins(data);
+                const { data } = await cryptoAPI.getTopCoins({ page: 1, perPage: 50, currency: 'usd' });
+                setCoins(data?.coins || []);
             } catch (error) {
                 console.error("Error fetching markets:", error);
             } finally {
@@ -83,11 +74,11 @@ const Markets = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>${coin.current_price.toLocaleString()}</td>
-                                        <td className={coin.price_change_percentage_24h > 0 ? 'text-success' : 'text-error'}>
-                                            {coin.price_change_percentage_24h?.toFixed(2)}%
+                                        <td>${toSafeNumber(coin.current_price).toLocaleString()}</td>
+                                        <td className={toSafeNumber(coin.price_change_percentage_24h) > 0 ? 'text-success' : 'text-error'}>
+                                            {formatPercentage(coin.price_change_percentage_24h)}
                                         </td>
-                                        <td>${coin.market_cap.toLocaleString()}</td>
+                                        <td>${toSafeNumber(coin.market_cap).toLocaleString()}</td>
                                     </tr>
                                 ))
                             )}

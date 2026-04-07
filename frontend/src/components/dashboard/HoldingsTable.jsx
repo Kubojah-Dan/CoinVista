@@ -4,13 +4,16 @@ import { Trash2, Edit } from "lucide-react";
 import { formatCurrency, formatNumber, formatPercentage } from "../../utils/format";
 
 export const HoldingsTable = ({ holdings = [], onDelete, onEdit, prices = [] }) => {
+    const getHoldingId = (holding) => holding?.id || holding?._id;
+
     const getPriceData = (symbol) => {
         return prices.find((p) => p.symbol === symbol) || null;
     };
 
     const calculateValue = (holding) => {
         const priceData = getPriceData(holding.symbol);
-        return priceData ? holding.amount * priceData.currentPrice : 0;
+        const currentPrice = priceData?.currentPrice ?? holding.currentPrice ?? 0;
+        return holding.amount * currentPrice;
     };
 
     const calculateProfit = (holding) => {
@@ -56,10 +59,11 @@ export const HoldingsTable = ({ holdings = [], onDelete, onEdit, prices = [] }) 
                             const profit = calculateProfit(holding);
                             const profitPercentage = calculateProfitPercentage(holding);
                             const isProfit = profit >= 0;
+                            const currentPrice = priceData?.currentPrice ?? holding.currentPrice ?? 0;
 
                             return (
                                 <motion.tr
-                                    key={holding._id || index}
+                                    key={getHoldingId(holding) || index}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: index * 0.05 }}
@@ -75,7 +79,7 @@ export const HoldingsTable = ({ holdings = [], onDelete, onEdit, prices = [] }) 
                                         {formatNumber(holding.amount, 4)}
                                     </td>
                                     <td className="px-6 py-4 text-right text-gray-900 dark:text-gray-100">
-                                        {priceData ? formatCurrency(priceData.currentPrice) : "-"}
+                                        {currentPrice ? formatCurrency(currentPrice) : "-"}
                                     </td>
                                     <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-gray-100">
                                         {formatCurrency(currentValue)}
@@ -97,7 +101,7 @@ export const HoldingsTable = ({ holdings = [], onDelete, onEdit, prices = [] }) 
                                                 <Edit className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                                             </button>
                                             <button
-                                                onClick={() => onDelete && onDelete(holding._id)}
+                                                onClick={() => onDelete && onDelete(getHoldingId(holding))}
                                                 className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                                             >
                                                 <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />

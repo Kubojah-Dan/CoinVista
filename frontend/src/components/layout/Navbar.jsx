@@ -15,9 +15,11 @@ const Navbar = () => {
         { name: 'Home', href: '/' },
         { name: 'Dashboard', href: '/dashboard' },
         { name: 'Markets', href: '/markets' },
+        { name: 'Simulator', href: '/simulator' },
         { name: 'Trending', href: '/trending' },
         { name: 'Watchlist', href: '/watchlist' },
         { name: 'Alerts', href: '/alerts' },
+        { name: 'Settings', href: '/settings' },
     ];
 
     const isActive = (path) => location.pathname === path;

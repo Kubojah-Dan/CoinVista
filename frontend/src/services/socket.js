@@ -1,80 +1,65 @@
-import io from 'socket.io-client';
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
 
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
 
-let socket = null;
+let stompClient = null;
 
-export const connectSocket = (userId) => {
-  if (socket) {
-    socket.disconnect();
+export const connectSocket = ({ onConnect, onDisconnect, onError } = {}) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.deactivate();
   }
 
-  socket = io(SOCKET_URL, {
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 10,
+  stompClient = new Client({
+    webSocketFactory: () => new SockJS(`${SOCKET_URL}/ws`),
+    reconnectDelay: 5000,
+    onConnect: () => {
+      console.log('Connected to WebSocket server');
+      onConnect?.(stompClient);
+    },
+    onDisconnect: () => {
+      console.log('Disconnected from WebSocket server');
+      onDisconnect?.();
+    },
+    onStompError: (frame) => {
+      console.error('STOMP error:', frame);
+      onError?.(frame);
+    },
   });
 
-  socket.on('connect', () => {
-    console.log('Connected to socket server');
-    if (userId) {
-      socket.emit('join', userId);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Disconnected from socket server');
-  });
-
-  socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error);
-  });
-
-  return socket;
+  stompClient.activate();
+  return stompClient;
 };
 
 export const subscribeToCoin = (coinId) => {
-  if (socket) {
-    socket.emit('subscribe-to-coin', coinId);
-  }
+  // Spring Boot broadcasts on /topic/coin/:coinId — no emit needed, just subscribe
 };
 
 export const unsubscribeFromCoin = (coinId) => {
-  if (socket) {
-    socket.emit('unsubscribe-from-coin', coinId);
-  }
+  // Handled by component-level unsubscribe
 };
 
 export const onPriceUpdates = (callback) => {
-  if (socket) {
-    socket.on('price-updates', callback);
+  if (stompClient) {
+    return stompClient.subscribe('/topic/prices', (message) => {
+      callback(JSON.parse(message.body));
+    });
   }
 };
 
-export const onCoinPriceUpdate = (callback) => {
-  if (socket) {
-    socket.on('coin-price-update', callback);
-  }
-};
-
-export const onAlertTriggered = (callback) => {
-  if (socket) {
-    socket.on('alert-triggered', callback);
-  }
-};
-
-export const onNotification = (callback) => {
-  if (socket) {
-    socket.on('notification', callback);
+export const onCoinPriceUpdate = (coinId, callback) => {
+  if (stompClient) {
+    return stompClient.subscribe(`/topic/coin/${coinId}`, (message) => {
+      callback(JSON.parse(message.body));
+    });
   }
 };
 
 export const disconnectSocket = () => {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
+  if (stompClient) {
+    stompClient.deactivate();
+    stompClient = null;
   }
 };
 
-export const getSocket = () => socket;
+export const getSocket = () => stompClient;
