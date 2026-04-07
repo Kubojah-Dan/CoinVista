@@ -26,7 +26,6 @@ Thumbs.db
 
 # MongoDB
 data/
-backend2/src/main/resources/application.properties
 backend2/target/classes/application.properties
 
 # Maven / Java build
@@ -51,6 +50,8 @@ pnpm-debug.log*
 # Frontend build / caches
 /frontend/build/
 /frontend/.cache/
+/frontend/package-lock.json
+/frontend/yarn.lock
 
 # Docker / local compose overrides
 docker-compose.override.yml
