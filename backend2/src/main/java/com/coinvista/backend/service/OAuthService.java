@@ -361,7 +361,7 @@ public class OAuthService {
     private void writeCookie(HttpServletResponse response, String name, String value, Duration duration, boolean httpOnly) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
                 .httpOnly(httpOnly)
-                .secure(false)
+                .secure(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(duration)

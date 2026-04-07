@@ -70,7 +70,7 @@ const AuthPage = () => {
             bootstrapSession().then((sessionUser) => {
                 if (sessionUser) {
                     toast.success(`Signed in with ${provider || 'social login'}`);
-                    navigate('/dashboard', { replace: true });
+                    window.location.href = '/dashboard';
                 }
             });
         }
