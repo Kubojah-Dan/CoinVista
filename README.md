@@ -265,5 +265,4 @@ If you have any questions or issues, please open an issue on GitHub.
 
 * * *
 
-<<<<<<< HEAD
 Made with ❤️ by Kuboja Daniel
