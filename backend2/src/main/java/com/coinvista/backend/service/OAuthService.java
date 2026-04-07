@@ -92,7 +92,7 @@ public class OAuthService {
     }
 
     public String getFrontendSuccessRedirect(String provider) {
-        return frontendBaseUrl + "/login?oauth=success&provider=" + provider;
+        return frontendBaseUrl + "/dashboard?oauth=success&provider=" + provider;
     }
 
     public String getFrontendErrorRedirect(String provider, String message) {
