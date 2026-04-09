@@ -65,7 +65,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchCoins(1, currency);
-    }, [currency, fetchCoins]);
+    }, [currency]);
 
     const loadPortfolio = async () => {
         setLoadingPortfolio(true);
@@ -227,7 +227,9 @@ const Dashboard = () => {
     return (
         <div className="min-h-screen bg-base-200 text-base-content transition-colors duration-300">
             {/* Background image with overlay */}
-            <div className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style="background-image: linear-gradient(var(--home-overlay), var(--home-overlay)), var(--home-bg-image);"></div>
+            <div className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style={{
+                backgroundImage: `linear-gradient(var(--home-overlay), var(--home-overlay)), var(--home-bg-image)`
+            }}></div>
 
             <div className="container mx-auto px-4 py-8 relative z-10">
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">

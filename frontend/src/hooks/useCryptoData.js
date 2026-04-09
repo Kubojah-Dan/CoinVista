@@ -8,11 +8,11 @@ export const useCryptoData = () => {
   const [page, setPage] = useState(1);
   const [currency, setCurrency] = useState('usd');
 
-  const fetchCoins = useCallback(async (pageNum = 1, currency = 'usd') => {
+   const fetchCoins = useCallback(async (pageNum = 1, curr = 'usd') => {
     try {
       setLoading(true);
       setError(null);
-      const response = await cryptoAPI.getTopCoins({ page: pageNum, perPage: 50, currency });
+      const response = await cryptoAPI.getTopCoins({ page: pageNum, perPage: 50, currency: curr });
       // sanitize numeric fields so frontend doesn't crash when API returns null
       const coinsData = (response.data?.coins || []).map(c => ({
         ...c,
@@ -21,7 +21,8 @@ export const useCryptoData = () => {
       }));
 
       setCoins(coinsData);
-      setCurrency(currency);
+      // Only update currency state if it's different to prevent infinite loops
+      setCurrency(prev => prev !== curr ? curr : prev);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch cryptocurrency data');
     } finally {
