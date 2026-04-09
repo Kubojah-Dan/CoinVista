@@ -2,15 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     BellRing,
+    ChevronLeft,
+    ChevronRight,
     DollarSign,
     Download,
     Eye,
     EyeOff,
     LineChart,
     Sparkles,
+    TrendingDown,
+    TrendingUp,
     Wallet,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../context/AuthContext';
 import { useCryptoData } from '../hooks/useCryptoData';
@@ -24,6 +28,7 @@ import { formatCurrency, formatNumber, formatPercentage, toSafeNumber } from '..
 const maskCurrency = (value, hidden) => (hidden ? '••••••' : formatCurrency(value));
 
 const Dashboard = () => {
+    const navigate = useNavigate();
     const { prices, connected } = useSocket();
     const { user, updateSettings, refreshUser } = useAuth();
     const [portfolioSummary, setPortfolioSummary] = useState({
@@ -307,11 +312,33 @@ const Dashboard = () => {
                     </div>
                 </div>
 
+                {/* ── Holdings Section ─────────────────────────────────── */}
+                <div className="mb-8">
+                    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">My Portfolio Holdings</h2>
+                        <div className="flex gap-2">
+                            <button className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>
+                                + Add Holding
+                            </button>
+                            <button className="btn btn-outline btn-sm" onClick={downloadPortfolioReport} disabled={downloadingReport}>
+                                <Download className="h-4 w-4" />
+                                {downloadingReport ? 'Exporting...' : 'Export CSV'}
+                            </button>
+                        </div>
+                    </div>
+                    <HoldingsTable
+                        holdings={portfolioSummary.holdings}
+                        prices={coins}
+                        onDelete={handleDeleteHolding}
+                    />
+                </div>
+
+                {/* ── Market Overview ───────────────────────────────────── */}
                 <div className="mb-8">
                     <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Market Overview</h2>
 
-                        <div className="flex gap-4">
+                        <div className="flex gap-3 flex-wrap">
                             <div className="join">
                                 {['usd', 'eur', 'btc'].map((unit) => (
                                     <button
@@ -323,7 +350,6 @@ const Dashboard = () => {
                                     </button>
                                 ))}
                             </div>
-
                             <input
                                 type="text"
                                 placeholder="Search coins..."
@@ -334,25 +360,111 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div className="col-span-2">
-                            <HoldingsTable
-                                holdings={portfolioSummary.holdings}
-                                prices={coins}
-                                onDelete={handleDeleteHolding}
-                            />
-                        </div>
-                        <div>
-                            <div className="card bg-base-100 p-4">
-                                <h3 className="font-semibold">Quick Actions</h3>
-                                <div className="mt-4 flex flex-col gap-2">
-                                    <button className="btn btn-sm" onClick={() => setShowAddModal(true)}>
-                                        Add Holding
-                                    </button>
-                                    <button className="btn btn-sm" onClick={downloadPortfolioReport}>
-                                        Export CSV
-                                    </button>
+                    <div className="glass-card overflow-hidden rounded-2xl bg-white shadow-lg dark:bg-dark-200">
+                        <div className="overflow-x-auto">
+                            {coinsLoading ? (
+                                <div className="flex items-center justify-center py-16">
+                                    <span className="loading loading-spinner loading-lg text-primary" />
                                 </div>
+                            ) : (
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-gray-200 text-sm font-semibold text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                                            <th className="px-4 py-3 text-left w-10">#</th>
+                                            <th className="px-4 py-3 text-left">Coin</th>
+                                            <th className="px-4 py-3 text-right">Price</th>
+                                            <th className="px-4 py-3 text-right">24h Change</th>
+                                            <th className="px-4 py-3 text-right hidden md:table-cell">Market Cap</th>
+                                            <th className="px-4 py-3 text-right hidden lg:table-cell">24h Volume</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredCoins.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                                                    {searchQuery ? `No coins match "${searchQuery}"` : 'No market data available'}
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filteredCoins.map((coin, index) => {
+                                                const change = coin.price_change_percentage_24h ?? 0;
+                                                const isUp = change >= 0;
+                                                const priceStr = currency === 'btc'
+                                                    ? `₿${(coin.current_price ?? 0).toFixed(8)}`
+                                                    : formatCurrency(coin.current_price ?? 0);
+                                                return (
+                                                    <motion.tr
+                                                        key={coin.id}
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        transition={{ delay: index * 0.02 }}
+                                                        onClick={() => navigate(`/coin/${coin.id}`)}
+                                                        className="cursor-pointer border-b border-gray-100 transition-colors hover:bg-primary/5 dark:border-gray-700/50 dark:hover:bg-primary/10"
+                                                    >
+                                                        <td className="px-4 py-3 text-sm text-gray-400">
+                                                            {coin.market_cap_rank ?? page * 50 - 50 + index + 1}
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex items-center gap-3">
+                                                                {coin.image && (
+                                                                    <img src={coin.image} alt={coin.name} className="h-8 w-8 rounded-full" />
+                                                                )}
+                                                                <div>
+                                                                    <div className="font-semibold text-gray-900 dark:text-gray-100">{coin.name}</div>
+                                                                    <div className="text-xs uppercase text-gray-500 dark:text-gray-400">{coin.symbol}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">
+                                                            {priceStr}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <span className={`inline-flex items-center gap-1 font-medium ${
+                                                                isUp ? 'text-success' : 'text-error'
+                                                            }`}>
+                                                                {isUp
+                                                                    ? <TrendingUp className="h-3.5 w-3.5" />
+                                                                    : <TrendingDown className="h-3.5 w-3.5" />}
+                                                                {Math.abs(change).toFixed(2)}%
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-gray-300 hidden md:table-cell">
+                                                            {coin.market_cap
+                                                                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(coin.market_cap)
+                                                                : 'N/A'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell">
+                                                            {coin.total_volume
+                                                                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(coin.total_volume)
+                                                                : 'N/A'}
+                                                        </td>
+                                                    </motion.tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+
+                        {/* Pagination */}
+                        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-gray-700">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Page {page}</span>
+                            <div className="flex gap-2">
+                                <button
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={prevPage}
+                                    disabled={page === 1 || coinsLoading}
+                                >
+                                    <ChevronLeft className="h-4 w-4" /> Prev
+                                </button>
+                                <button
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={nextPage}
+                                    disabled={coinsLoading}
+                                >
+                                    Next <ChevronRight className="h-4 w-4" />
+                                </button>
                             </div>
                         </div>
                     </div>

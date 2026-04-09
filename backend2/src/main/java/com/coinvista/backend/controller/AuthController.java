@@ -144,8 +144,8 @@ public class AuthController {
     private void writeRefreshCookie(HttpServletResponse response, String value, boolean clear) {
         ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE, value)
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true)          // Required for SameSite=None and HTTPS production
+                .sameSite("None")      // Required for cross-origin cookie delivery (frontend ≠ backend domain)
                 .path("/")
                 .maxAge(clear ? Duration.ZERO : Duration.ofDays(30))
                 .build();

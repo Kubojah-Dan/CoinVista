@@ -7,12 +7,13 @@ export const HoldingsTable = ({ holdings = [], onDelete, onEdit, prices = [] }) 
     const getHoldingId = (holding) => holding?.id || holding?._id;
 
     const getPriceData = (symbol) => {
-        return prices.find((p) => p.symbol === symbol) || null;
+        return prices.find((p) => p.symbol?.toUpperCase() === symbol?.toUpperCase()) || null;
     };
 
     const calculateValue = (holding) => {
         const priceData = getPriceData(holding.symbol);
-        const currentPrice = priceData?.currentPrice ?? holding.currentPrice ?? 0;
+        // API returns current_price (snake_case); support both for safety
+        const currentPrice = priceData?.current_price ?? priceData?.currentPrice ?? holding.currentPrice ?? 0;
         return holding.amount * currentPrice;
     };
 
@@ -59,7 +60,7 @@ export const HoldingsTable = ({ holdings = [], onDelete, onEdit, prices = [] }) 
                             const profit = calculateProfit(holding);
                             const profitPercentage = calculateProfitPercentage(holding);
                             const isProfit = profit >= 0;
-                            const currentPrice = priceData?.currentPrice ?? holding.currentPrice ?? 0;
+                            const currentPrice = priceData?.current_price ?? priceData?.currentPrice ?? holding.currentPrice ?? 0;
 
                             return (
                                 <motion.tr
