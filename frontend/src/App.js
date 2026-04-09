@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/layout/Navbar';
+import BottomNav from './components/BottomNav';
 import Home from './pages/Home';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
@@ -24,7 +25,7 @@ function AppShell() {
     return (
         <div className="min-h-screen bg-base-200 text-base-content transition-colors duration-300">
             {!isAuthRoute && <Navbar />}
-            <div className={isAuthRoute ? '' : 'container mx-auto px-4 py-8'}>
+            <div className={isAuthRoute || location.pathname === '/' ? '' : 'container mx-auto px-4 py-8'}>
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<AuthPage />} />
@@ -34,7 +35,9 @@ function AppShell() {
                         path="/dashboard"
                         element={
                             <ProtectedRoute>
-                                <Dashboard />
+                                <div className="container mx-auto px-4 py-8">
+                                    <Dashboard />
+                                </div>
                             </ProtectedRoute>
                         }
                     />
@@ -42,7 +45,9 @@ function AppShell() {
                         path="/alerts"
                         element={
                             <ProtectedRoute>
-                                <Alerts />
+                                <div className="container mx-auto px-4 py-8">
+                                    <Alerts />
+                                </div>
                             </ProtectedRoute>
                         }
                     />
@@ -50,7 +55,9 @@ function AppShell() {
                         path="/markets"
                         element={
                             <ProtectedRoute>
-                                <Markets />
+                                <div className="container mx-auto px-4 py-8">
+                                    <Markets />
+                                </div>
                             </ProtectedRoute>
                         }
                     />
@@ -58,7 +65,9 @@ function AppShell() {
                         path="/simulator"
                         element={
                             <ProtectedRoute>
-                                <PaperTrading />
+                                <div className="container mx-auto px-4 py-8">
+                                    <PaperTrading />
+                                </div>
                             </ProtectedRoute>
                         }
                     />
@@ -66,7 +75,9 @@ function AppShell() {
                         path="/settings"
                         element={
                             <ProtectedRoute>
-                                <Settings />
+                                <div className="container mx-auto px-4 py-8">
+                                    <Settings />
+                                </div>
                             </ProtectedRoute>
                         }
                     />
@@ -74,7 +85,9 @@ function AppShell() {
                         path="/trending"
                         element={
                             <ProtectedRoute>
-                                <Trending />
+                                <div className="container mx-auto px-4 py-8">
+                                    <Trending />
+                                </div>
                             </ProtectedRoute>
                         }
                     />
@@ -82,7 +95,9 @@ function AppShell() {
                         path="/watchlist"
                         element={
                             <ProtectedRoute>
-                                <Watchlist />
+                                <div className="container mx-auto px-4 py-8">
+                                    <Watchlist />
+                                </div>
                             </ProtectedRoute>
                         }
                     />
@@ -90,13 +105,16 @@ function AppShell() {
                         path="/coin/:id"
                         element={
                             <ProtectedRoute>
-                                <CoinDetail />
+                                <div className="container mx-auto px-4 py-8">
+                                    <CoinDetail />
+                                </div>
                             </ProtectedRoute>
                         }
                     />
                 </Routes>
             </div>
             <Toaster position="top-right" />
+            {!isAuthRoute && <BottomNav />}
         </div>
     );
 }

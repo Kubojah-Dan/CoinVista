@@ -49,6 +49,13 @@ const Dashboard = () => {
     });
     const [loadingPortfolio, setLoadingPortfolio] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
+    
+    // Listen for bottom nav add button event
+    useEffect(() => {
+        const handleOpenAdd = () => setShowAddModal(true);
+        window.addEventListener('openAddHolding', handleOpenAdd);
+        return () => window.removeEventListener('openAddHolding', handleOpenAdd);
+    }, []);
     const [downloadingReport, setDownloadingReport] = useState(false);
     const [walletBalance, setWalletBalance] = useState(null);
 
@@ -218,8 +225,11 @@ const Dashboard = () => {
     const portfolioPositive = toSafeNumber(portfolioSummary.profitLoss) >= 0;
 
     return (
-        <div className="min-h-screen">
-            <div className="container mx-auto px-6 py-8">
+        <div className="min-h-screen bg-base-200 text-base-content transition-colors duration-300">
+            {/* Background image with overlay */}
+            <div className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style="background-image: linear-gradient(var(--home-overlay), var(--home-overlay)), var(--home-bg-image);"></div>
+
+            <div className="container mx-auto px-4 py-8 relative z-10">
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>

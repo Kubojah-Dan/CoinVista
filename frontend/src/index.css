@@ -11,6 +11,12 @@ body {
     -moz-osx-font-smoothing: grayscale;
     background-color: #d1d5db;
     /* Light mode bg restored to user preference */
+    padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior: none;
+}
+
+html {
+    overscroll-behavior: none;
 }
 
 :root {

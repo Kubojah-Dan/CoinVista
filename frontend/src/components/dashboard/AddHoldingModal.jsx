@@ -20,11 +20,11 @@ export const AddHoldingModal = ({ onClose, onSubmit, prices = [] }) => {
             const next = { ...prev, [name]: value };
 
             if (name === "symbol") {
-                const coin = prices.find((p) => p.symbol?.toUpperCase() === value.toUpperCase());
+                const coin = prices.find((p) => p.symbol === value);
                 if (coin) {
                     const purchasePrice = coin.currentPrice ?? coin.current_price ?? "";
                     next.coinId = coin.id || "";
-                    next.symbol = coin.symbol?.toUpperCase() || value.toUpperCase();
+                    next.symbol = coin.symbol || value;
                     next.name = coin.name || "";
                     if (!prev.purchasePrice) {
                         next.purchasePrice = purchasePrice.toString();
@@ -91,12 +91,12 @@ export const AddHoldingModal = ({ onClose, onSubmit, prices = [] }) => {
                                 value={formData.symbol}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-3 rounded-xl glass-card border-2 border-transparent focus:border-primary bg-white/50 dark:bg-dark-100/50 text-gray-900 dark:text-gray-100 focus:outline-none"
+                                className="w-full px-4 py-3 rounded-xl glass-card border-2 border-transparent focus:border-primary bg-white/50 dark:bg-dark-100/50 text-gray-900 dark:text-gray-100 focus:outline-none cursor-pointer"
                             >
                                 <option value="">Select cryptocurrency</option>
-                                {prices.map((coin) => (
-                                    <option key={`${coin.id || coin.symbol}`} value={coin.symbol}>
-                                        {coin.name} ({coin.symbol})
+                                {prices.map((coin, index) => (
+                                    <option key={`${coin.id}-${index}`} value={coin.symbol}>
+                                        {coin.name} ({coin.symbol?.toUpperCase()})
                                     </option>
                                 ))}
                             </select>

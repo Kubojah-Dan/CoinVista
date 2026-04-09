@@ -66,14 +66,14 @@ const AuthPage = () => {
         const provider = params.get('provider');
         const message = params.get('message');
 
-        if (oauthStatus === 'success') {
-            bootstrapSession().then((sessionUser) => {
-                if (sessionUser) {
-                    toast.success(`Signed in with ${provider || 'social login'}`);
-                    window.location.href = '/dashboard';
-                }
-            });
+if (oauthStatus === 'success') {
+    bootstrapSession().then((sessionUser) => {
+        if (sessionUser) {
+            toast.success(`Signed in with ${provider || 'social login'}`);
+            navigate('/dashboard');
         }
+    });
+}
 
         if (oauthStatus === 'error') {
             toast.error(message || `Unable to sign in with ${provider || 'social login'}`);
