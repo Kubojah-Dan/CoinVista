@@ -26,10 +26,10 @@ const BottomNav = () => {
   return (
     <>
       {/* Bottom Navigation - only visible on mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden px-2 pb-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden px-2 pb-2 safe-area-bottom">
         {/* Add Holding button (floating) */}
         <div className="relative">
-          <div className="flex justify-around items-end h-20 px-1 bg-base-100/95 dark:bg-dark-200/95 backdrop-blur-xl border border-base-200 dark:border-dark-100 shadow-xl" style={{ borderRadius: '28px' }}>
+          <div className="flex justify-between items-end h-20 px-2 bg-base-100/95 dark:bg-dark-200/95 backdrop-blur-xl border border-base-200 dark:border-dark-100 shadow-xl" style={{ borderRadius: '28px' }}>
             {navItems.slice(0, 2).map((item) => {
               const Icon = item.icon;
               return (
@@ -80,7 +80,7 @@ const BottomNav = () => {
         </div>
       </nav>
       {/* Add bottom padding for pages so content isn't hidden behind the nav */}
-      <div className="h-28 md:hidden"></div>
+      <div className="h-32 md:hidden"></div>
     </>
   );
 };
