@@ -34,7 +34,8 @@ const Navbar = () => {
                         <span>CoinVista</span>
                     </Link>
 
-                    {/* Desktop Menu */}
+                    {/* Desktop Menu - Only visible when logged in */}
+                    {user && (
                     <div className="hidden md:flex items-center space-x-8">
                         {navigation.map((item) => (
                             <Link
@@ -49,6 +50,7 @@ const Navbar = () => {
                             </Link>
                         ))}
                     </div>
+                    )}
 
                     {/* Right Side Actions */}
                     <div className="hidden md:flex items-center space-x-4">
@@ -71,12 +73,14 @@ const Navbar = () => {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button */}
+                    {/* Mobile Menu Button - Only show when logged in */}
                     <div className="md:hidden flex items-center gap-4">
                         <ThemeToggle />
-                        <button onClick={() => setIsOpen(!isOpen)} className="text-gray-600 dark:text-gray-300">
-                            {isOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
-                        </button>
+                        {user && (
+                            <button onClick={() => setIsOpen(!isOpen)} className="text-gray-600 dark:text-gray-300">
+                                {isOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -85,7 +89,7 @@ const Navbar = () => {
             {isOpen && (
                 <div className="md:hidden bg-white dark:bg-dark-100 border-t border-gray-200 dark:border-gray-800">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                        {navigation.map((item) => (
+                        {user && navigation.map((item) => (
                             <Link
                                 key={item.name}
                                 to={item.href}

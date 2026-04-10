@@ -15,6 +15,32 @@ body {
     overscroll-behavior: none;
 }
 
+@layer utilities {
+    .no-shrink {
+        flex-shrink: 0;
+        min-width: 0;
+    }
+    .mobile-safe {
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+}
+
+@media (max-width: 767px) {
+    :root {
+        --home-bg-image: none;
+    }
+    .dark {
+        --home-bg-image: none;
+    }
+}
+
+/* Prevent flex containers from shrinking content */
+div, section, main, article {
+    min-width: 0;
+}
+
 html {
     overscroll-behavior: none;
 }

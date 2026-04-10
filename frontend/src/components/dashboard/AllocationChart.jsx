@@ -19,21 +19,22 @@ export const AllocationChart = ({ data }) => {
     };
 
     return (
-        <div className="glass-card p-6 bg-white dark:bg-dark-200 rounded-2xl shadow-lg">
-            <h3 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">Portfolio Allocation</h3>
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_240px] xl:items-center">
-                <div className="h-[300px] min-w-0">
+        <div className="glass-card p-4 md:p-6 bg-white dark:bg-dark-200 rounded-2xl shadow-lg">
+            <h3 className="text-xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-gray-100">Portfolio Allocation</h3>
+            <div className="flex flex-col md:grid md:gap-6 md:grid-cols-[minmax(0,1fr)_240px] md:items-center">
+                <div className="h-[280px] md:h-[300px] w-full flex-shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
+                        <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
                             <Pie
                                 data={data}
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                outerRadius={100}
-                                innerRadius={54}
+                                outerRadius={90}
+                                innerRadius={45}
                                 fill="#8884d8"
                                 dataKey="value"
+                                isAnimationActive={false}
                             >
                                 {data.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

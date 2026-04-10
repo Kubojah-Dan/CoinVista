@@ -226,12 +226,15 @@ const Dashboard = () => {
 
     return (
         <div className="min-h-screen bg-base-200 text-base-content transition-colors duration-300">
-            {/* Background image with overlay */}
-            <div className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style={{
+            {/* Background image with overlay - hidden on mobile for better performance */}
+            <div className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 hidden md:block" style={{
                 backgroundImage: `linear-gradient(var(--home-overlay), var(--home-overlay)), var(--home-bg-image)`
             }}></div>
 
-            <div className="container mx-auto px-4 py-8 relative z-10">
+            {/* Mobile solid background */}
+            <div className="fixed inset-0 bg-base-200 md:hidden"></div>
+
+            <div className="container mx-auto px-3 py-6 md:px-4 md:py-8 relative z-10">
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>
@@ -261,7 +264,7 @@ const Dashboard = () => {
                     </div>
                 </motion.div>
 
-                <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                <div className="mb-6 md:mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     <StatCard
                         title="Live Portfolio Value"
                         value={maskCurrency(portfolioSummary.totalValue, hidden)}
@@ -290,13 +293,13 @@ const Dashboard = () => {
                     />
                 </div>
 
-                <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="mb-6 md:mb-8 grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-2">
                         <PortfolioChart data={portfolioTrendData} />
                     </div>
-                    <div className="space-y-6">
+                    <div className="space-y-4 md:space-y-6">
                         <AllocationChart data={allocationData} />
-                        <div className="glass-card rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-200">
+                        <div className="glass-card rounded-2xl bg-white p-4 md:p-6 shadow-lg dark:bg-dark-200">
                             <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100">Wallet & On-Ramp</h3>
                             <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
                                 <p>
@@ -325,10 +328,10 @@ const Dashboard = () => {
                 </div>
 
                 {/* ── Holdings Section ─────────────────────────────────── */}
-                <div className="mb-8">
-                    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">My Portfolio Holdings</h2>
-                        <div className="flex gap-2">
+                <div className="mb-6 md:mb-8">
+                    <div className="mb-4 md:mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">My Portfolio Holdings</h2>
+                        <div className="flex gap-2 overflow-x-auto">
                             <button className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>
                                 + Add Holding
                             </button>
@@ -346,11 +349,11 @@ const Dashboard = () => {
                 </div>
 
                 {/* ── Market Overview ───────────────────────────────────── */}
-                <div className="mb-8">
-                    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Market Overview</h2>
+                <div className="mb-6 md:mb-8">
+                    <div className="mb-4 md:mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">Market Overview</h2>
 
-                        <div className="flex gap-3 flex-wrap">
+                        <div className="flex gap-2 md:gap-3 flex-wrap">
                             <div className="join">
                                 {['usd', 'eur', 'btc'].map((unit) => (
                                     <button
@@ -364,10 +367,10 @@ const Dashboard = () => {
                             </div>
                             <input
                                 type="text"
-                                placeholder="Search coins..."
+                                placeholder="Search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="input input-bordered input-sm w-full max-w-xs"
+                                className="input input-bordered input-sm w-24 md:w-full md:max-w-xs"
                             />
                         </div>
                     </div>
@@ -379,15 +382,15 @@ const Dashboard = () => {
                                     <span className="loading loading-spinner loading-lg text-primary" />
                                 </div>
                             ) : (
-                                <table className="w-full">
+                                <table className="w-full min-w-[500px]">
                                     <thead>
                                         <tr className="border-b border-gray-200 text-sm font-semibold text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                                            <th className="px-4 py-3 text-left w-10">#</th>
-                                            <th className="px-4 py-3 text-left">Coin</th>
-                                            <th className="px-4 py-3 text-right">Price</th>
-                                            <th className="px-4 py-3 text-right">24h Change</th>
-                                            <th className="px-4 py-3 text-right hidden md:table-cell">Market Cap</th>
-                                            <th className="px-4 py-3 text-right hidden lg:table-cell">24h Volume</th>
+                                            <th className="px-2 py-3 text-left w-8 min-w-[40px]">#</th>
+                                            <th className="px-2 py-3 text-left min-w-[120px]">Coin</th>
+                                            <th className="px-2 py-3 text-right min-w-[80px]">Price</th>
+                                            <th className="px-2 py-3 text-right min-w-[80px]">24h</th>
+                                            <th className="px-2 py-3 text-right hidden md:table-cell min-w-[100px]">Mkt Cap</th>
+                                            <th className="px-2 py-3 text-right hidden lg:table-cell min-w-[100px]">Volume</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -413,39 +416,39 @@ const Dashboard = () => {
                                                         onClick={() => navigate(`/coin/${coin.id}`)}
                                                         className="cursor-pointer border-b border-gray-100 transition-colors hover:bg-primary/5 dark:border-gray-700/50 dark:hover:bg-primary/10"
                                                     >
-                                                        <td className="px-4 py-3 text-sm text-gray-400">
+                                                        <td className="px-2 py-3 text-sm text-gray-400 whitespace-nowrap">
                                                             {coin.market_cap_rank ?? page * 50 - 50 + index + 1}
                                                         </td>
-                                                        <td className="px-4 py-3">
-                                                            <div className="flex items-center gap-3">
+                                                        <td className="px-2 py-3">
+                                                            <div className="flex items-center gap-2 min-w-[100px]">
                                                                 {coin.image && (
-                                                                    <img src={coin.image} alt={coin.name} className="h-8 w-8 rounded-full" />
+                                                                    <img src={coin.image} alt={coin.name} className="h-6 w-6 md:h-8 md:w-8 rounded-full" />
                                                                 )}
-                                                                <div>
-                                                                    <div className="font-semibold text-gray-900 dark:text-gray-100">{coin.name}</div>
+                                                                <div className="min-w-0">
+                                                                    <div className="font-semibold text-gray-900 dark:text-gray-100 text-sm md:text-base truncate max-w-[60px] md:max-w-none">{coin.name}</div>
                                                                     <div className="text-xs uppercase text-gray-500 dark:text-gray-400">{coin.symbol}</div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">
+                                                        <td className="px-2 py-3 text-right font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
                                                             {priceStr}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right">
-                                                            <span className={`inline-flex items-center gap-1 font-medium ${
+                                                        <td className="px-2 py-3 text-right whitespace-nowrap">
+                                                            <span className={`inline-flex items-center gap-1 font-medium text-xs md:text-sm ${
                                                                 isUp ? 'text-success' : 'text-error'
                                                             }`}>
                                                                 {isUp
-                                                                    ? <TrendingUp className="h-3.5 w-3.5" />
-                                                                    : <TrendingDown className="h-3.5 w-3.5" />}
+                                                                    ? <TrendingUp className="h-3 w-3 md:h-3.5 md:w-3.5" />
+                                                                    : <TrendingDown className="h-3 w-3 md:h-3.5 md:w-3.5" />}
                                                                 {Math.abs(change).toFixed(2)}%
                                                             </span>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-gray-300 hidden md:table-cell">
+                                                        <td className="px-2 py-3 text-right text-sm text-gray-700 dark:text-gray-300 hidden md:table-cell whitespace-nowrap">
                                                             {coin.market_cap
                                                                 ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(coin.market_cap)
                                                                 : 'N/A'}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell">
+                                                        <td className="px-2 py-3 text-right text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell whitespace-nowrap">
                                                             {coin.total_volume
                                                                 ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(coin.total_volume)
                                                                 : 'N/A'}

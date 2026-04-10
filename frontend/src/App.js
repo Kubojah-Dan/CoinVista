@@ -29,7 +29,7 @@ function AppShell() {
 
     return (
         <div className="min-h-screen bg-base-200 text-base-content transition-colors duration-300">
-            {!isAuthRoute && !isLandingPage && <Navbar />}
+            {!isAuthRoute && <Navbar />}
             <div className={isAuthRoute || isLandingPage ? '' : 'px-3 py-4 md:container md:mx-auto md:px-4 md:py-8'}>
                 <Routes>
                     <Route path="/" element={<Home />} />
