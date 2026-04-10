@@ -21,8 +21,8 @@ export const AllocationChart = ({ data }) => {
     return (
         <div className="glass-card p-4 md:p-6 bg-white dark:bg-dark-200 rounded-2xl shadow-lg">
             <h3 className="text-xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-gray-100">Portfolio Allocation</h3>
-            <div className="flex flex-col md:grid md:gap-6 md:grid-cols-[minmax(0,1fr)_240px] md:items-center">
-                <div className="h-[280px] md:h-[300px] w-full flex-shrink-0">
+            <div className="flex flex-col lg:grid lg:gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+                <div className="h-[280px] lg:h-[300px] w-full flex-shrink-0 min-w-0">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
                             <Pie
@@ -30,8 +30,8 @@ export const AllocationChart = ({ data }) => {
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                outerRadius={90}
-                                innerRadius={45}
+                                outerRadius="80%"
+                                innerRadius="40%"
                                 fill="#8884d8"
                                 dataKey="value"
                                 isAnimationActive={false}
@@ -45,7 +45,7 @@ export const AllocationChart = ({ data }) => {
                     </ResponsiveContainer>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="grid gap-3 sm:grid-cols-2 lg:w-48 xl:w-56">
                     {data.map((entry, index) => (
                         <div key={`${entry.symbol}-${index}`} className="flex items-start gap-3 rounded-xl bg-base-200/70 p-3 dark:bg-dark-100/80">
                             <span
