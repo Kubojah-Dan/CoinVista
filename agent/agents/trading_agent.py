@@ -5,8 +5,10 @@ from langchain_groq import ChatGroq
 from langgraph.prebuilt import create_react_agent
 from analysis.ta_indicators import compute_all_indicators
 
-# Define the base URL of the Spring Boot application (internal address)
-BACKEND_URL = "http://127.0.0.1:5000/api"
+import os
+
+# Define the base URL of the Spring Boot application
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:5000/api")
 
 # --- Raw Python Implementations (Prevents LangChain Tool Wrapper Callback errors) ---
 
