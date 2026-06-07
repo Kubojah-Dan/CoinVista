@@ -88,6 +88,8 @@ public class AlertMonitorService {
 
                 User owner = alertService.getAlertOwner(triggeredAlert.getUserId());
 
+                boolean notificationSent = false;
+
                 if (owner.isEmailNotificationsEnabled() && notificationService.canSendEmail()) {
                     notificationService.sendPriceAlertEmail(
                             owner.getEmail(),
@@ -97,6 +99,22 @@ public class AlertMonitorService {
                             currentPrice,
                             alert.getDirection()
                     );
+                    notificationSent = true;
+                }
+
+                if (owner.isWhatsAppNotificationsEnabled() && owner.getPhoneNumber() != null && !owner.getPhoneNumber().isBlank() && notificationService.canSendWhatsApp()) {
+                    notificationService.sendPriceAlertWhatsApp(
+                            owner.getPhoneNumber(),
+                            alert.getName() == null || alert.getName().isBlank() ? alert.getSymbol() : alert.getName(),
+                            alert.getSymbol(),
+                            alert.getTargetPrice(),
+                            currentPrice,
+                            alert.getDirection()
+                    );
+                    notificationSent = true;
+                }
+
+                if (notificationSent) {
                     triggeredAlert.setNotificationSentAt(Instant.now());
                     alertService.save(triggeredAlert);
                 }

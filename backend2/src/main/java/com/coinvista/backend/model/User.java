@@ -37,6 +37,10 @@ public class User {
 
     private boolean emailNotificationsEnabled = true;
 
+    private boolean whatsAppNotificationsEnabled = false;
+
+    private String phoneNumber;
+
     private boolean twoFactorEnabled = false;
 
     private String encryptedTotpSecret;
@@ -48,6 +52,16 @@ public class User {
     private Double paperStartingBalance = 10000.0;
 
     private Double paperCashBalance = 10000.0;
+
+    private boolean paperTradingEnabled = true;
+
+    private boolean liveTradingEnabled = false;
+
+    private String encryptedExchangeApiKey;
+
+    private String encryptedExchangeApiSecret;
+
+    private String activeExchange = "binance";
 
     private boolean emailVerified = false;
 

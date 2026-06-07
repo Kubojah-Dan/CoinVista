@@ -66,6 +66,21 @@ public class CryptoController {
         }
     }
 
+    @GetMapping("/coins/{id}/ohlcv")
+    public ResponseEntity<?> getCoinOhlcv(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(defaultValue = "usd") String currency) {
+        try {
+            Object ohlcv = coinGeckoService.getCoinOhlcv(id, currency, days);
+            return ResponseEntity.ok(ohlcv);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to fetch OHLCV data"));
+        }
+    }
+
+
     @GetMapping("/search")
     public ResponseEntity<?> searchCoins(@RequestParam String query) {
         try {

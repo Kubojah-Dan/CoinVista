@@ -30,6 +30,8 @@ public class AuthDto {
     public static class UpdateSettingsRequest {
         private Boolean privacyModeEnabled;
         private Boolean emailNotificationsEnabled;
+        private Boolean whatsAppNotificationsEnabled;
+        private String phoneNumber;
         @Pattern(
                 regexp = "^$|^(0x[a-fA-F0-9]{40})$",
                 message = "Wallet address must be a valid EVM address"
@@ -52,6 +54,8 @@ public class AuthDto {
         private String authProvider;
         private boolean privacyModeEnabled;
         private boolean emailNotificationsEnabled;
+        private boolean whatsAppNotificationsEnabled;
+        private String phoneNumber;
         private boolean twoFactorEnabled;
         private Double paperStartingBalance;
         private Double paperCashBalance;

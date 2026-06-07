@@ -1,143 +1,366 @@
 package com.coinvista.backend.service;
 
 import com.coinvista.backend.dto.PaperTradingDto;
-import com.coinvista.backend.model.PaperTrade;
-import com.coinvista.backend.model.User;
-import com.coinvista.backend.repository.PaperTradeRepository;
-import com.coinvista.backend.repository.UserRepository;
+import com.coinvista.backend.model.*;
+import com.coinvista.backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaperTradingService {
 
     private static final double DEFAULT_STARTING_BALANCE = 10000.0;
 
-    private final PaperTradeRepository paperTradeRepository;
     private final UserRepository userRepository;
+    private final PaperPositionRepository paperPositionRepository;
+    private final ClosedTradeRepository closedTradeRepository;
+    private final AgentPerformanceRepository agentPerformanceRepository;
     private final CoinGeckoService coinGeckoService;
 
     public PaperTradingDto.Summary getSummary(String userId) {
-        List<PaperTrade> descendingTrades = paperTradeRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        List<PaperTrade> ascendingTrades = paperTradeRepository.findByUserIdOrderByCreatedAtAsc(userId);
-        User user = normalizePaperBalances(getUser(userId), !ascendingTrades.isEmpty());
+        User user = getUser(userId);
+        user = normalizePaperBalances(user);
 
-        Ledger ledger = buildLedger(ascendingTrades);
-        Map<String, Map<String, Object>> marketData = coinGeckoService.getCoinsMarketData(
-                ledger.positions.keySet().stream().toList(),
-                "usd"
-        ).stream().collect(LinkedHashMap::new, (map, item) -> map.put(item.get("id").toString(), item), Map::putAll);
+        // Fetch active positions
+        List<PaperPosition> activePositions = paperPositionRepository.findByUserId(userId);
+        
+        // Enrich positions with current price from CoinGecko
+        List<String> coinIds = activePositions.stream().map(PaperPosition::getCoinId).distinct().toList();
+        Map<String, Map<String, Object>> marketData = new HashMap<>();
+        if (!coinIds.isEmpty()) {
+            marketData = coinGeckoService.getCoinsMarketData(coinIds, "usd").stream()
+                    .filter(item -> item.get("id") != null)
+                    .collect(Collectors.toMap(
+                            item -> item.get("id").toString(),
+                            item -> item,
+                            (l, r) -> l
+                    ));
+        }
 
-        List<PaperTradingDto.PositionView> positions = new ArrayList<>();
+        List<PaperTradingDto.PositionView> positionViews = new ArrayList<>();
         double marketValue = 0.0;
         double unrealizedPnl = 0.0;
 
-        for (PositionState position : ledger.positions.values()) {
-            if (position.quantity <= 0) {
-                continue;
+        for (PaperPosition pos : activePositions) {
+            Map<String, Object> data = marketData.getOrDefault(pos.getCoinId(), Map.of());
+            double currentPrice = data.isEmpty() ? pos.getEntryPrice() : coinGeckoService.toDouble(data.get("current_price"));
+            
+            double posValue;
+            double costBasis = pos.getEntryPrice() * pos.getSize();
+            double posUnrealizedPnl;
+            
+            if ("short".equalsIgnoreCase(pos.getSide())) {
+                // Short PnL = (Entry - Current) * Size
+                posUnrealizedPnl = (pos.getEntryPrice() - currentPrice) * pos.getSize();
+                // Short position value = CostBasis + PnL
+                posValue = costBasis + posUnrealizedPnl;
+            } else {
+                // Long PnL = (Current - Entry) * Size
+                posUnrealizedPnl = (currentPrice - pos.getEntryPrice()) * pos.getSize();
+                posValue = currentPrice * pos.getSize();
             }
 
-            Map<String, Object> data = marketData.getOrDefault(position.coinId, Map.of());
-            double currentPrice = data.isEmpty() ? position.averageCost : coinGeckoService.toDouble(data.get("current_price"));
-            double positionMarketValue = currentPrice * position.quantity;
-            double costBasis = position.averageCost * position.quantity;
-            double positionUnrealizedPnl = positionMarketValue - costBasis;
-            double roi = costBasis > 0 ? (positionUnrealizedPnl / costBasis) * 100.0 : 0.0;
+            double roi = costBasis > 0 ? (posUnrealizedPnl / costBasis) * 100.0 : 0.0;
 
             PaperTradingDto.PositionView view = new PaperTradingDto.PositionView();
-            view.setCoinId(position.coinId);
-            view.setSymbol(position.symbol);
-            view.setName(position.name);
-            view.setQuantity(round(position.quantity));
-            view.setAverageCost(round(position.averageCost));
+            view.setId(pos.getId());
+            view.setCoinId(pos.getCoinId());
+            view.setSymbol(pos.getSymbol());
+            view.setName(pos.getName());
+            view.setQuantity(round(pos.getSize()));
+            view.setAverageCost(round(pos.getEntryPrice()));
             view.setCurrentPrice(round(currentPrice));
-            view.setMarketValue(round(positionMarketValue));
-            view.setUnrealizedPnl(round(positionUnrealizedPnl));
+            view.setMarketValue(round(posValue));
+            view.setUnrealizedPnl(round(posUnrealizedPnl));
             view.setRoi(round(roi));
-            positions.add(view);
+            view.setSide(pos.getSide().toLowerCase());
+            view.setStopLoss(pos.getStopLoss() != null ? round(pos.getStopLoss()) : null);
+            view.setTakeProfit(pos.getTakeProfit() != null ? round(pos.getTakeProfit()) : null);
+            view.setStrategy(pos.getStrategy());
+            view.setOpenedAt(pos.getOpenedAt());
+            positionViews.add(view);
 
-            marketValue += positionMarketValue;
-            unrealizedPnl += positionUnrealizedPnl;
+            marketValue += posValue;
+            unrealizedPnl += posUnrealizedPnl;
         }
+
+        // Fetch closed trades
+        List<ClosedTrade> closedTrades = closedTradeRepository.findByUserIdOrderByClosedAtDesc(userId);
+        List<PaperTradingDto.TradeView> tradeViews = closedTrades.stream().map(this::toTradeView).toList();
+
+        // Calculate total realized PnL
+        double totalRealizedPnl = closedTrades.stream().mapToDouble(ClosedTrade::getPnl).sum();
+
+        // Fetch Agent performance statistics
+        List<AgentPerformance> performanceStats = agentPerformanceRepository.findByUserId(userId);
+        List<PaperTradingDto.PerformanceView> performanceViews = performanceStats.stream()
+                .map(this::toPerformanceView)
+                .toList();
 
         PaperTradingDto.Summary summary = new PaperTradingDto.Summary();
         summary.setStartingBalance(round(user.getPaperStartingBalance()));
         summary.setCashBalance(round(user.getPaperCashBalance()));
         summary.setMarketValue(round(marketValue));
         summary.setTotalValue(round(user.getPaperCashBalance() + marketValue));
-        summary.setRealizedPnl(round(ledger.realizedPnl));
+        summary.setRealizedPnl(round(totalRealizedPnl));
         summary.setUnrealizedPnl(round(unrealizedPnl));
         summary.setTotalPnl(round((user.getPaperCashBalance() + marketValue) - user.getPaperStartingBalance()));
-        summary.setPositions(positions.stream()
-                .sorted(Comparator.comparing(PaperTradingDto.PositionView::getMarketValue, Comparator.reverseOrder()))
-                .toList());
-        summary.setTrades(descendingTrades.stream().map(this::toView).toList());
+        summary.setPaperTradingEnabled(user.isPaperTradingEnabled());
+        summary.setLiveTradingEnabled(user.isLiveTradingEnabled());
+        summary.setPositions(positionViews);
+        summary.setTrades(tradeViews);
+        summary.setPerformance(performanceViews);
         return summary;
     }
 
     public PaperTradingDto.Summary placeTrade(String userId, PaperTradingDto.TradeRequest request) {
-        List<PaperTrade> existingTrades = paperTradeRepository.findByUserIdOrderByCreatedAtAsc(userId);
-        User user = normalizePaperBalances(getUser(userId), !existingTrades.isEmpty());
-        Ledger ledger = buildLedger(existingTrades);
-        PositionState currentPosition = ledger.positions.get(request.getCoinId());
+        User user = getUser(userId);
+        user = normalizePaperBalances(user);
 
         double currentPrice = coinGeckoService.getCurrentPrice(request.getCoinId(), "usd");
-        double totalValue = currentPrice * request.getQuantity();
-        String side = request.getSide().toLowerCase(Locale.US);
-        double realizedPnl = 0.0;
+        double orderValue = currentPrice * request.getQuantity();
 
-        if ("buy".equals(side)) {
-            if (user.getPaperCashBalance() < totalValue) {
-                throw new IllegalArgumentException(String.format(
-                        Locale.US,
-                        "Insufficient simulator cash balance. Available: $%.2f, required: $%.2f.",
-                        user.getPaperCashBalance(),
-                        totalValue
-                ));
+        // Retrieve existing position for the asset
+        Optional<PaperPosition> existingOpt = paperPositionRepository.findByUserIdAndCoinId(userId, request.getCoinId());
+        String requestSide = request.getSide().toLowerCase(); // buy or sell
+
+        if ("buy".equals(requestSide)) {
+            // BUY Action
+            if (existingOpt.isPresent() && "short".equalsIgnoreCase(existingOpt.get().getSide())) {
+                // We are buying to cover a Short position
+                PaperPosition pos = existingOpt.get();
+                closeOrReducePosition(user, pos, request.getQuantity(), currentPrice, "manual");
+            } else {
+                // We are opening/adding to a Long position
+                if (user.getPaperCashBalance() < orderValue) {
+                    throw new IllegalArgumentException(String.format(
+                            Locale.US,
+                            "Insufficient simulator balance. Cash: $%.2f, required: $%.2f.",
+                            user.getPaperCashBalance(),
+                            orderValue
+                    ));
+                }
+                user.setPaperCashBalance(user.getPaperCashBalance() - orderValue);
+                userRepository.save(user);
+
+                PaperPosition pos = existingOpt.orElse(new PaperPosition());
+                pos.setUserId(userId);
+                pos.setCoinId(request.getCoinId());
+                pos.setSymbol(request.getSymbol().toUpperCase());
+                pos.setName(request.getName());
+                pos.setSide("long");
+                pos.setStopLoss(request.getStopLoss());
+                pos.setTakeProfit(request.getTakeProfit());
+                pos.setStrategy(request.getStrategy() != null ? request.getStrategy() : "Manual");
+
+                if (existingOpt.isPresent()) {
+                    // Accumulate size and calculate average entry price
+                    double newSize = pos.getSize() + request.getQuantity();
+                    double totalCost = (pos.getEntryPrice() * pos.getSize()) + orderValue;
+                    pos.setEntryPrice(totalCost / newSize);
+                    pos.setSize(newSize);
+                } else {
+                    pos.setEntryPrice(currentPrice);
+                    pos.setSize(request.getQuantity());
+                    pos.setOpenedAt(Instant.now());
+                }
+                paperPositionRepository.save(pos);
             }
-            user.setPaperCashBalance(user.getPaperCashBalance() - totalValue);
         } else {
-            if (currentPosition == null || currentPosition.quantity < request.getQuantity()) {
-                throw new IllegalArgumentException("Not enough simulator position to sell");
+            // SELL Action
+            if (existingOpt.isPresent() && "long".equalsIgnoreCase(existingOpt.get().getSide())) {
+                // We are selling to close a Long position
+                PaperPosition pos = existingOpt.get();
+                closeOrReducePosition(user, pos, request.getQuantity(), currentPrice, "manual");
+            } else {
+                // We are opening/adding to a Short position
+                if (user.getPaperCashBalance() < orderValue) {
+                    throw new IllegalArgumentException(String.format(
+                            Locale.US,
+                            "Insufficient cash for short margin. Cash: $%.2f, required margin: $%.2f.",
+                            user.getPaperCashBalance(),
+                            orderValue
+                    ));
+                }
+                // Shorting deducts margin from balance (simplified: cash remains the collateral, PnL settled on close)
+                user.setPaperCashBalance(user.getPaperCashBalance() - orderValue);
+                userRepository.save(user);
+
+                PaperPosition pos = existingOpt.orElse(new PaperPosition());
+                pos.setUserId(userId);
+                pos.setCoinId(request.getCoinId());
+                pos.setSymbol(request.getSymbol().toUpperCase());
+                pos.setName(request.getName());
+                pos.setSide("short");
+                pos.setStopLoss(request.getStopLoss());
+                pos.setTakeProfit(request.getTakeProfit());
+                pos.setStrategy(request.getStrategy() != null ? request.getStrategy() : "Manual");
+
+                if (existingOpt.isPresent()) {
+                    double newSize = pos.getSize() + request.getQuantity();
+                    double totalCost = (pos.getEntryPrice() * pos.getSize()) + orderValue;
+                    pos.setEntryPrice(totalCost / newSize);
+                    pos.setSize(newSize);
+                } else {
+                    pos.setEntryPrice(currentPrice);
+                    pos.setSize(request.getQuantity());
+                    pos.setOpenedAt(Instant.now());
+                }
+                paperPositionRepository.save(pos);
             }
-            realizedPnl = (currentPrice - currentPosition.averageCost) * request.getQuantity();
-            user.setPaperCashBalance(user.getPaperCashBalance() + totalValue);
         }
-
-        userRepository.save(user);
-
-        PaperTrade trade = new PaperTrade();
-        trade.setUserId(userId);
-        trade.setCoinId(request.getCoinId());
-        trade.setSymbol(request.getSymbol().toUpperCase(Locale.US));
-        trade.setName(request.getName());
-        trade.setSide(side);
-        trade.setQuantity(request.getQuantity());
-        trade.setExecutedPrice(currentPrice);
-        trade.setTotalValue(totalValue);
-        trade.setRealizedPnl(realizedPnl);
-        trade.setCreatedAt(Instant.now());
-        paperTradeRepository.save(trade);
 
         return getSummary(userId);
     }
 
+    public void closeOrReducePosition(User user, PaperPosition pos, double quantity, double exitPrice, String closeReason) {
+        double closeQty = Math.min(pos.getSize(), quantity);
+        double costBasis = pos.getEntryPrice() * closeQty;
+        double pnl;
+
+        if ("short".equalsIgnoreCase(pos.getSide())) {
+            // Short PnL = (Entry - Exit) * Qty
+            pnl = (pos.getEntryPrice() - exitPrice) * closeQty;
+        } else {
+            // Long PnL = (Exit - Entry) * Qty
+            pnl = (exitPrice - pos.getEntryPrice()) * closeQty;
+        }
+
+        // Return original size value + PnL back to user's cash balance
+        user.setPaperCashBalance(user.getPaperCashBalance() + costBasis + pnl);
+        userRepository.save(user);
+
+        // Record closed trade
+        ClosedTrade trade = new ClosedTrade();
+        trade.setUserId(pos.getUserId());
+        trade.setCoinId(pos.getCoinId());
+        trade.setSymbol(pos.getSymbol());
+        trade.setName(pos.getName());
+        trade.setSide(pos.getSide());
+        trade.setEntryPrice(pos.getEntryPrice());
+        trade.setExitPrice(exitPrice);
+        trade.setSize(closeQty);
+        trade.setStopLoss(pos.getStopLoss());
+        trade.setTakeProfit(pos.getTakeProfit());
+        trade.setStrategy(pos.getStrategy());
+        trade.setOpenedAt(pos.getOpenedAt());
+        trade.setClosedAt(Instant.now());
+        trade.setPnl(pnl);
+        
+        double pnlPct = costBasis > 0 ? (pnl / costBasis) * 100.0 : 0.0;
+        trade.setPnlPercent(pnlPct);
+        trade.setCloseReason(closeReason);
+        closedTradeRepository.save(trade);
+
+        // Update position size or delete
+        if (pos.getSize() <= closeQty) {
+            paperPositionRepository.delete(pos);
+        } else {
+            pos.setSize(pos.getSize() - closeQty);
+            paperPositionRepository.save(pos);
+        }
+
+        // Recalculate Agent Performance metrics for this strategy
+        updateAgentPerformance(pos.getUserId(), pos.getStrategy());
+    }
+
+    public void updateAgentPerformance(String userId, String strategy) {
+        if (strategy == null || strategy.isBlank()) {
+            return;
+        }
+
+        List<ClosedTrade> trades = closedTradeRepository.findByUserIdAndStrategy(userId, strategy);
+        if (trades.isEmpty()) {
+            agentPerformanceRepository.findByUserIdAndStrategy(userId, strategy)
+                    .ifPresent(agentPerformanceRepository::delete);
+            return;
+        }
+
+        int totalTrades = trades.size();
+        long wins = trades.stream().filter(t -> t.getPnl() > 0).count();
+        double winRate = totalTrades > 0 ? ((double) wins / totalTrades) * 100.0 : 0.0;
+
+        double sumPnlPercent = trades.stream().mapToDouble(ClosedTrade::getPnlPercent).sum();
+        double avgRnR = totalTrades > 0 ? sumPnlPercent / totalTrades : 0.0;
+
+        // Simplified Sharpe Ratio: average returns over standard deviation of returns
+        double sharpeRatio = 0.0;
+        if (totalTrades > 1) {
+            double mean = avgRnR;
+            double varianceSum = trades.stream()
+                    .mapToDouble(t -> Math.pow(t.getPnlPercent() - mean, 2))
+                    .sum();
+            double stdDev = Math.sqrt(varianceSum / totalTrades);
+            if (stdDev > 0) {
+                sharpeRatio = mean / stdDev;
+            }
+        } else if (totalTrades == 1) {
+            // Default 1 trade baseline
+            sharpeRatio = avgRnR > 0 ? 1.0 : avgRnR < 0 ? -1.0 : 0.0;
+        }
+
+        // Maximum Drawdown
+        double maxDrawdown = 0.0;
+        double currentBalance = DEFAULT_STARTING_BALANCE;
+        double peak = currentBalance;
+        List<ClosedTrade> sortedTrades = trades.stream()
+                .sorted(Comparator.comparing(ClosedTrade::getClosedAt))
+                .toList();
+
+        for (ClosedTrade t : sortedTrades) {
+            currentBalance += t.getPnl();
+            if (currentBalance > peak) {
+                peak = currentBalance;
+            }
+            double dd = peak > 0 ? ((peak - currentBalance) / peak) * 100.0 : 0.0;
+            if (dd > maxDrawdown) {
+                maxDrawdown = dd;
+            }
+        }
+
+        AgentPerformance perf = agentPerformanceRepository.findByUserIdAndStrategy(userId, strategy)
+                .orElse(new AgentPerformance());
+        perf.setUserId(userId);
+        perf.setStrategy(strategy);
+        perf.setTotalTrades(totalTrades);
+        perf.setWinRate(round(winRate));
+        perf.setAvgRnR(round(avgRnR));
+        perf.setSharpeRatio(round(sharpeRatio));
+        perf.setMaxDrawdown(round(maxDrawdown));
+        perf.setUpdatedAt(Instant.now());
+        agentPerformanceRepository.save(perf);
+    }
+
     public PaperTradingDto.Summary reset(String userId) {
         User user = getUser(userId);
-        user = normalizePaperBalances(user, false);
+        user = normalizePaperBalances(user);
         user.setPaperCashBalance(user.getPaperStartingBalance());
         userRepository.save(user);
-        paperTradeRepository.deleteByUserId(userId);
+
+        paperPositionRepository.deleteByUserId(userId);
+        closedTradeRepository.deleteByUserId(userId);
+        agentPerformanceRepository.deleteByUserId(userId);
+
         return getSummary(userId);
+    }
+
+    public void updateAgentExecutionToggle(String userId, boolean paperTradingEnabled, boolean liveTradingEnabled) {
+        User user = getUser(userId);
+        user.setPaperTradingEnabled(paperTradingEnabled);
+        user.setLiveTradingEnabled(liveTradingEnabled);
+        user.setUpdatedAt(Instant.now());
+        userRepository.save(user);
+    }
+
+    public List<PaperPosition> getAllOpenPositions() {
+        return paperPositionRepository.findAll();
     }
 
     private User getUser(String userId) {
@@ -145,7 +368,7 @@ public class PaperTradingService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-    private User normalizePaperBalances(User user, boolean hasTradeHistory) {
+    private User normalizePaperBalances(User user) {
         boolean changed = false;
 
         if (user.getPaperStartingBalance() == null || user.getPaperStartingBalance() <= 0) {
@@ -153,7 +376,7 @@ public class PaperTradingService {
             changed = true;
         }
 
-        if (user.getPaperCashBalance() == null || (!hasTradeHistory && user.getPaperCashBalance() <= 0)) {
+        if (user.getPaperCashBalance() == null || user.getPaperCashBalance() <= 0) {
             user.setPaperCashBalance(user.getPaperStartingBalance());
             changed = true;
         }
@@ -166,67 +389,40 @@ public class PaperTradingService {
         return user;
     }
 
-    private Ledger buildLedger(List<PaperTrade> trades) {
-        Ledger ledger = new Ledger();
-
-        for (PaperTrade trade : trades) {
-            PositionState position = ledger.positions.computeIfAbsent(trade.getCoinId(), key ->
-                    new PositionState(trade.getCoinId(), trade.getSymbol(), trade.getName())
-            );
-
-            if ("buy".equalsIgnoreCase(trade.getSide())) {
-                double newQuantity = position.quantity + trade.getQuantity();
-                double totalCost = (position.averageCost * position.quantity) + (trade.getExecutedPrice() * trade.getQuantity());
-                position.quantity = newQuantity;
-                position.averageCost = newQuantity > 0 ? totalCost / newQuantity : 0.0;
-            } else {
-                position.quantity = Math.max(0.0, position.quantity - trade.getQuantity());
-                if (position.quantity == 0.0) {
-                    position.averageCost = 0.0;
-                }
-                ledger.realizedPnl += trade.getRealizedPnl() == null ? 0.0 : trade.getRealizedPnl();
-            }
-        }
-
-        return ledger;
-    }
-
-    private PaperTradingDto.TradeView toView(PaperTrade trade) {
+    private PaperTradingDto.TradeView toTradeView(ClosedTrade trade) {
         PaperTradingDto.TradeView view = new PaperTradingDto.TradeView();
         view.setId(trade.getId());
         view.setCoinId(trade.getCoinId());
         view.setSymbol(trade.getSymbol());
         view.setName(trade.getName());
         view.setSide(trade.getSide());
-        view.setQuantity(round(trade.getQuantity()));
-        view.setExecutedPrice(round(trade.getExecutedPrice()));
-        view.setTotalValue(round(trade.getTotalValue()));
-        view.setRealizedPnl(round(trade.getRealizedPnl()));
-        view.setCreatedAt(trade.getCreatedAt());
+        view.setAction("long".equalsIgnoreCase(trade.getSide()) ? "sell" : "buy"); // action to close
+        view.setQuantity(round(trade.getSize()));
+        view.setEntryPrice(round(trade.getEntryPrice()));
+        view.setExitPrice(round(trade.getExitPrice()));
+        view.setTotalValue(round(trade.getExitPrice() * trade.getSize()));
+        view.setRealizedPnl(round(trade.getPnl()));
+        view.setPnlPercent(round(trade.getPnlPercent()));
+        view.setStrategy(trade.getStrategy());
+        view.setCloseReason(trade.getCloseReason());
+        view.setOpenedAt(trade.getOpenedAt());
+        view.setClosedAt(trade.getClosedAt());
+        return view;
+    }
+
+    private PaperTradingDto.PerformanceView toPerformanceView(AgentPerformance perf) {
+        PaperTradingDto.PerformanceView view = new PaperTradingDto.PerformanceView();
+        view.setStrategy(perf.getStrategy());
+        view.setTotalTrades(perf.getTotalTrades());
+        view.setWinRate(perf.getWinRate());
+        view.setAvgRnR(perf.getAvgRnR());
+        view.setSharpeRatio(perf.getSharpeRatio());
+        view.setMaxDrawdown(perf.getMaxDrawdown());
         return view;
     }
 
     private double round(Double value) {
         double safe = value == null ? 0.0 : value;
         return Math.round(safe * 100.0) / 100.0;
-    }
-
-    private static class Ledger {
-        private final Map<String, PositionState> positions = new LinkedHashMap<>();
-        private double realizedPnl = 0.0;
-    }
-
-    private static class PositionState {
-        private final String coinId;
-        private final String symbol;
-        private final String name;
-        private double quantity = 0.0;
-        private double averageCost = 0.0;
-
-        private PositionState(String coinId, String symbol, String name) {
-            this.coinId = coinId;
-            this.symbol = symbol;
-            this.name = name;
-        }
     }
 }

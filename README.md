@@ -1,268 +1,148 @@
 # CoinVista 🚀
 
-A modern, full-stack cryptocurrency dashboard built with React, Node.js, Express, MongoDB, and the CoinGecko API. Features real-time price updates, interactive charts, watchlist management, and price alerts.
+CoinVista is a premium, full-stack cryptocurrency intelligence platform and paper trading simulator. Built with a modern React frontend, a high-performance Java Spring Boot backend, and a Groq-powered FastAPI AI Agent, CoinVista delivers real-time blockchain indicators, advanced charting, automated trading execution, and social safety nets.
 
-![CoinVista](https://img.shields.io/badge/version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg)
-
-<br/>
-
-## ✨ Features
-
--   📊 **Real-time Cryptocurrency Data**: Live prices and market data from CoinGecko API
--   📈 **Interactive Charts**: Beautiful, responsive price charts with multiple time ranges
--   🔔 **Price Alerts**: Set custom price alerts and receive notifications
--   ⭐ **Watchlist**: Track your favorite cryptocurrencies
--   🎨 **Modern UI**: Built with Tailwind CSS and DaisyUI
--   🌙 **Dark/Light Theme**: Toggle between themes
--   🔐 **Authentication**: Secure user authentication with JWT
--   📱 **Responsive Design**: Works seamlessly on desktop and mobile
--   🔄 **Real-time Updates**: Socket.IO for live price updates
-<br/>
-
-## 🛠️ Tech Stack
-
-### Frontend
-
--   React 18
--   React Router DOM
--   Tailwind CSS
--   DaisyUI
--   Chart.js
--   React Chart.js 2
--   Axios
--   Socket.IO Client
--   React Toastify
--   Lucide React Icons
+![CoinVista Version](https://img.shields.io/badge/version-2.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 <br/>
 
-### Backend
+## ✨ Key Features
 
--   Node.js
--   Express.js
--   MongoDB
--   Mongoose
--   Socket.IO
--   JWT Authentication
--   CoinGecko API
--   Helmet (Security)
--   Express Rate Limiting
+- 📊 **Advanced Candlestick Charts**: Built using **TradingView Lightweight Charts v5**, featuring live price updates, volume histogram overlays, support/resistance levels, Fibonacci retracements, and indicator overlays (EMA 20/50/200, Bollinger Bands).
+- 🤖 **FastAPI AI Agent Assistant**: An autonomous quantitative analyst powered by **LangGraph** and **Groq (Llama 3.1 8B / 3.3 70B)**. The agent retrieves indicators, detects candlestick patterns, analyzes sentiment, and executes trades autonomously.
+- 📈 **Pro Paper Trading Simulator**: Supports long/short margin trading, custom **Stop-Loss (SL)** and **Take-Profit (TP)** boundaries, strategy classifications, and key portfolio metrics (Sharpe Ratio, Max Drawdown, Win Rate).
+- 🛡️ **Live Trading Safety Gate**: Safety gating prevents activation of live exchange trading until the user completes at least **30 paper trades** with a **win rate > 50%**. Live keys are fully AES-GCM encrypted.
+- 🦊 **Web3 MetaMask Integration**: Connect native EVM wallets to view live ETH balances directly on the global Navbar and Settings page.
+- 📰 **Sentiment Analytics**: Aggregates and scores live headlines from **CryptoPanic** (v1 REST API) and **GNews**, featuring a robust mock news fallback mechanism when third-party API quotas are exceeded.
 
 <br/>
 
-## 📋 Prerequisites
+## 🛠️ Technology Stack
 
-Before you begin, ensure you have the following installed:
+### Frontend (React)
+- React 18 & React Router DOM
+- TradingView Lightweight Charts (v5)
+- Ethers.js / MetaMask Web3 Provider
+- Tailwind CSS & DaisyUI
+- Socket.IO Client (STOMP WebSockets)
+- Lucide Icons
 
--   Node.js (v14 or higher)
--   MongoDB (local or Atlas)
--   npm or yarn
--   CoinGecko API Key (get free at [coingecko.com](https://www.coingecko.com/en/api))
-<br/>
-  ## 🚀 Installation
+### Backend (Spring Boot)
+- Java 17 / Spring Boot 3.2.0
+- Spring Security & JWT Token Verification
+- Spring Data MongoDB (State persistence)
+- WebClient (Reactive HTTP requests)
+- Spring WebSockets & STOMP Message Broker
+- AES-256-GCM Exchange Credentials Encryption
 
-### 1\. Clone the Repository
+### AI Agent Service (FastAPI)
+- Python 3.9+ & FastAPI
+- LangGraph (Agentic workflow graphs)
+- LangChain Groq (Llama-3.1-8b-instant & Llama-3.3-70b-versatile)
+- Technical Analysis Engine (Pandas, NumPy computations for EMA, SMA, VWAP, RSI, MACD, Stochastic, ATR, support/resistance, Fibonacci, and pattern recognition)
 
-```bash
-git clone <repository-url>
-cd coinvista
-```
-
-### 2\. Backend Setup
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Install dependencies
-npm install
-
-# Create .env file
-cp .env.example .env
-
-# Edit .env file and add your credentials
-```
-
-**Backend .env Configuration:**
-
-```env
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/coinvista
-JWT_SECRET=your_jwt_secret_key_here_change_in_production
-COINGECKO_API_KEY=your_coingecko_api_key_here
-NODE_ENV=development
-```
-
-### 3\. Frontend Setup
-
-```bash
-# Navigate to frontend directory
-cd ../frontend
-
-# Install dependencies
-npm install
-```
-
-**Frontend .env Configuration:**
-
-```env
-REACT_APP_API_URL=http://localhost:5000/api
-REACT_APP_SOCKET_URL=http://localhost:5000
-```
-
-### 4\. Start MongoDB
-
-Make sure MongoDB is running on your system:
-
-```bash
-# If using local MongoDB
-mongod
-
-# Or use MongoDB Atlas connection string in .env
-```
-
-### 5\. Run the Application
-
-**Start Backend:**
-
-```bash
-# From the backend directory
-cd backend
-npm run dev
-```
-
-The backend server will run on `http://localhost:5000`
-
-**Start Frontend:**
-
-```bash
-# From the frontend directory (in a new terminal)
-cd frontend
-npm start
-```
-
-The frontend will run on `http://localhost:3000`
+---
 
 ## 📁 Project Structure
 
 ```
 coinvista/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/     # Request handlers
-│   │   ├── models/          # MongoDB schemas
-│   │   ├── routes/          # API routes
-│   │   ├── services/        # Business logic & API integrations
-│   │   ├── middleware/      # Authentication & error handling
-│   │   ├── utils/           # Helper functions
-│   │   ├── sockets/         # Socket.IO setup
-│   │   ├── app.js           # Express app configuration
-│   │   └── server.js        # Server entry point
-│   ├── .env                 # Environment variables
-│   ├── package.json
-│   └── README.md
+├── backend2/            # Java Spring Boot Backend Service (Port 5000)
+│   ├── src/main/java/   # Core logic: controllers, services, repositories, models
+│   ├── src/main/resources/
+│   │   └── application.properties # Application properties
+│   └── pom.xml          # Maven dependencies
 │
-├── frontend/
-│   ├── src/
-│   │   ├── assets/          # Images, logos
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/           # Page-level components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── services/        # API clients & Socket.IO
-│   │   ├── context/         # React contexts
-│   │   ├── utils/           # Helper functions
-│   │   ├── App.js           # Root app component
-│   │   ├── index.js         # Entry point
-│   │   └── index.css        # Global styles
-│   ├── public/
-│   ├── .env                 # Frontend environment variables
-│   ├── package.json
-│   ├── tailwind.config.js
-│   └── postcss.config.js
+├── agent/               # FastAPI Python AI Agent Microservice (Port 8000)
+│   ├── agents/          # LangGraph reactive agent structures
+│   ├── analysis/        # Technical analysis calculations (ta_indicators.py)
+│   ├── main.py          # FastAPI server entry point (SSE streaming endpoints)
+│   └── requirements.txt # Python dependencies
 │
-├── README.md
-└── .gitignore
+├── frontend/            # React Frontend SPA (Port 3000)
+│   ├── src/
+│   │   ├── components/  # PriceChart (Lightweight Charts), AgentChat panel, Navbar
+│   │   ├── pages/       # Dashboard, Settings (MetaMask), PaperTrading (Pro Simulator)
+│   │   └── services/    # REST API endpoints & WebSocket listeners
+│   └── package.json
+│
+├── docker-compose.yml   # Multi-service container orchestration
+└── .env                 # Unified local environment configuration
 ```
 
-<br/>
+---
 
-## 🔑 Getting CoinGecko API Key
+## 🚀 Getting Started
 
-1.  Visit [CoinGecko API](https://www.coingecko.com/en/api)
-2.  Sign up for a free account
-3.  Get your API key from the dashboard
-4.  Add it to your backend `.env` file
+### 📋 Prerequisites
+Ensure you have the following installed:
+- Java 17 or higher & Maven 3+
+- Node.js (v18 or higher) & npm
+- Python 3.9+ & virtualenv
+- MongoDB (running locally on port `27017` or MongoDB Atlas URI)
+- Groq API Key ([console.groq.com](https://console.groq.com/))
 
-## 📱 Usage
+### 1. Environment Configurations
+Create a `.env` file in the root directory:
+```env
+# MongoDB Connection
+MONGODB_URI=mongodb://127.0.0.1:27017/coinvista
 
-### Dashboard
+# JWT Authentication Config
+JWT_SECRET=your_secure_32_byte_jwt_secret_key_here
+JWT_ACCESS_EXPIRATION=900000
+JWT_REFRESH_EXPIRATION=2592000000
+ENCRYPTION_KEY=4a7f3b9c2e1d8a6f5c0b4e7d9a2f1c8b3e6d0a9f2c5b8e1d4a7f0c3b6e9d2a5
+REFRESH_COOKIE_NAME=coinvista_refresh
 
--   View top cryptocurrencies with market data
--   Filter by different currencies (USD, EUR, BTC)
--   Search for specific cryptocurrencies
--   Pagination for browsing more coins
+# CORS Configurations
+CORS_ORIGINS=http://localhost:3000
 
-### Coin Details
+# Third-party APIs
+COINGECKO_API_KEY=your_coingecko_api_key
+CRYPTOPANIC_API_KEY=your_cryptopanic_api_key
+GNEWS_API_KEY=your_gnews_api_key
 
--   Click on any cryptocurrency to view detailed information
--   Interactive price charts with multiple time ranges (1D, 7D, 14D, 30D, 90D, 1Y)
--   Market statistics and metrics
--   Add to watchlist
--   Set price alerts
+# Groq AI Agent
+GROQ_API_KEY=gsk_your_groq_api_key
+GROQ_MODEL=llama-3.1-8b-instant
+```
 
-### Watchlist
+### 2. Start Services
 
--   Add/remove cryptocurrencies from your watchlist
--   Track favorite coins in one place
--   Real-time price updates
+#### Run Spring Boot Backend:
+```bash
+cd backend2
+mvn spring-boot:run
+```
+*The backend server will launch at `http://localhost:5000`*
 
-### Price Alerts
+#### Run Python AI Agent:
+```bash
+# From the root directory, create a virtual environment
+python -m venv .coinVenv
+.\.coinVenv\Scripts\activate
 
--   Set custom price alerts (above/below target price)
--   Receive notifications when alerts are triggered
--   Manage all your alerts
+# Install dependencies and start FastAPI
+pip install -r agent/requirements.txt
+python agent/main.py
+```
+*The agent microservice will run at `http://localhost:8000`*
 
-## 🎨 Features in Detail
+#### Run React Frontend:
+```bash
+cd frontend
+npm install
+npm start
+```
+*The web dashboard will open at `http://localhost:3000`*
 
-### Real-time Updates
+---
 
--   Prices update every 30 seconds via Socket.IO
--   Alert checking every minute
--   Live notifications for triggered alerts
+## 🔒 Security & Safety Gates
 
-### Interactive Charts
-
--   Beautiful gradient fills
--   Hover tooltips with detailed information
--   Responsive design
--   Multiple time range options
-
-### Authentication
-
--   Secure JWT-based authentication
--   Protected routes for authenticated users
--   User preferences (currency, theme)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 🙏 Acknowledgments
-
--   [CoinGecko](https://www.coingecko.com/) for the cryptocurrency data API
--   [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
--   [DaisyUI](https://daisyui.com/) for the beautiful UI components
--   [Chart.js](https://www.chartjs.org/) for the interactive charts
--   [Socket.IO](https://socket.io/) for real-time communication
-
-## 📞 Support
-
-If you have any questions or issues, please open an issue on GitHub.
-
-* * *
-
-Made with ❤️ by Kuboja Daniel
+1. **Safety Gating**: Live trading controls are physically locked. To unlock:
+   - Perform at least **30 paper trades** in the simulator.
+   - Maintain a mathematical **win rate > 50%** across your closed positions.
+2. **Encrypted Keys**: Exchange API keys and secrets are protected using AES-256-GCM authenticated encryption before saving to MongoDB.
+3. **Loop-Recursion Prevention**: The AI assistant utilizes system prompt bounds that reject infinite agent retries on tool errors.

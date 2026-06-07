@@ -142,10 +142,15 @@ public class AuthController {
     }
 
     private void writeRefreshCookie(HttpServletResponse response, String value, boolean clear) {
+        org.springframework.web.context.request.ServletRequestAttributes attributes = 
+                (org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attributes != null ? attributes.getRequest() : null;
+        boolean isSecure = request != null && (request.isSecure() || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto")));
+
         ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE, value)
                 .httpOnly(true)
-                .secure(true)          // Required for SameSite=None and HTTPS production
-                .sameSite("None")      // Required for cross-origin cookie delivery (frontend ≠ backend domain)
+                .secure(isSecure)
+                .sameSite(isSecure ? "None" : "Lax")
                 .path("/")
                 .maxAge(clear ? Duration.ZERO : Duration.ofDays(30))
                 .build();

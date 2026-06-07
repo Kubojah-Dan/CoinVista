@@ -18,14 +18,17 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PriceChart from '../components/PriceChart';
-import { useCoinChart, useCoinDetails, useCryptoData, useWatchlist, useAlerts } from '../hooks/useCryptoData';
+import CandlestickChart from '../components/CandlestickChart';
+import { useCoinChart, useCoinOhlcv, useCoinDetails, useCryptoData, useWatchlist, useAlerts } from '../hooks/useCryptoData';
 import { cryptoAPI, intelligenceAPI } from '../services/api';
 import { subscribeToCoin, unsubscribeFromCoin } from '../services/socket';
 
 const CoinDetail = () => {
     const { id } = useParams();
     const { coin, loading: detailsLoading, error: detailsError } = useCoinDetails(id);
-    const { chartData, loading: chartLoading, fetchChartData } = useCoinChart(id);
+    const { chartData, loading: trendLoading, fetchChartData } = useCoinChart(id);
+    const { ohlcvData, loading: ohlcvLoading, fetchOhlcvData } = useCoinOhlcv(id);
+    const chartLoading = trendLoading || ohlcvLoading;
     const { watchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
     const { createAlert } = useAlerts();
     const { coins, fetchCoins } = useCryptoData();
@@ -90,6 +93,7 @@ const CoinDetail = () => {
     const handleDaysChange = (days) => {
         setSelectedDays(days);
         fetchChartData(id, days);
+        fetchOhlcvData(id, days);
     };
 
     const isInWatchlist = watchlist.some((item) => item.id === id);
@@ -233,7 +237,7 @@ const CoinDetail = () => {
                     {insights?.prediction?.disclaimer || 'Experimental research-only signals. Not financial advice.'}
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-8 flex flex-col gap-6">
                     <div className="mb-4 flex flex-wrap items-center gap-3">
                         {[1, 7, 14, 30, 90, 365].map((days) => (
                             <button
@@ -258,6 +262,13 @@ const CoinDetail = () => {
                             ))}
                         </select>
                     </div>
+
+                    <CandlestickChart
+                        ohlcvData={ohlcvData}
+                        coinName={coin.name}
+                        comparisonHistory={comparisonChart}
+                        comparisonName={comparisonLabel}
+                    />
 
                     <PriceChart
                         history={chartData?.prices?.map((item) => item[1]) || []}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes, FaWallet } from 'react-icons/fa';
 import logoSvg from '../../assets/logo.svg';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { Button } from '../common/Button';
@@ -9,7 +9,24 @@ import { useAuth } from '../../context/AuthContext';
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
-    const { user, logout } = useAuth(); // Assuming AuthContext provides user object now
+    const { user, logout, updateSettings } = useAuth();
+
+    const connectWallet = async () => {
+        if (!window.ethereum) {
+            alert('MetaMask or another EVM wallet is required for wallet connection.');
+            return;
+        }
+
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const address = accounts?.[0];
+            if (address) {
+                await updateSettings({ walletAddress: address });
+            }
+        } catch (error) {
+            console.error('Wallet connection failed:', error);
+        }
+    };
 
     const navigation = [
         { name: 'Home', href: '/' },
@@ -58,6 +75,20 @@ const Navbar = () => {
 
                         {user ? (
                             <div className="flex items-center gap-4">
+                                {user.walletAddress ? (
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-mono">
+                                        <FaWallet className="w-3.5 h-3.5" />
+                                        <span>{`${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`}</span>
+                                    </div>
+                                ) : (
+                                    <button 
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-dark-200 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-700 text-xs transition-all duration-200" 
+                                        onClick={connectWallet}
+                                    >
+                                        <FaWallet className="w-3.5 h-3.5" />
+                                        <span>Connect Wallet</span>
+                                    </button>
+                                )}
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Hi, {user.name}</span>
                                 <Button variant="outline" size="sm" onClick={logout}>Logout</Button>
                             </div>
@@ -112,6 +143,23 @@ const Navbar = () => {
                         )}
                         {user && (
                             <div className="flex flex-col space-y-2 px-3 mt-2">
+                                {user.walletAddress ? (
+                                    <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 text-primary border border-primary/20 text-sm font-mono">
+                                        <div className="flex items-center gap-2">
+                                            <FaWallet className="w-4 h-4" />
+                                            <span>Wallet Connected</span>
+                                        </div>
+                                        <span className="text-xs bg-primary/20 px-2 py-0.5 rounded">{`${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`}</span>
+                                    </div>
+                                ) : (
+                                    <button 
+                                        className="flex items-center justify-center gap-2 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-200 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-700 text-sm transition-all duration-200 w-full" 
+                                        onClick={() => { connectWallet(); setIsOpen(false); }}
+                                    >
+                                        <FaWallet className="w-4 h-4" />
+                                        <span>Connect MetaMask Wallet</span>
+                                    </button>
+                                )}
                                 <Button variant="outline" onClick={() => { logout(); setIsOpen(false); }}>Logout</Button>
                             </div>
                         )}

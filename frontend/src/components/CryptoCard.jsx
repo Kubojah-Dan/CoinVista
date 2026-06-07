@@ -1,55 +1,23 @@
 import React from 'react';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
 import { formatPercentage, toSafeNumber } from '../utils/format';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 const CryptoCard = ({ coin }) => {
   const priceChange24h = toSafeNumber(coin.price_change_percentage_24h);
   const priceChangeColor = priceChange24h > 0 ? 'text-success' : 'text-error';
 
-  const chartData = {
-    labels: coin.sparkline_in_7d.price.map((_, i) => i),
-    datasets: [
-      {
-        data: coin.sparkline_in_7d.price,
-        borderColor: priceChange24h > 0 ? '#10B981' : '#EF4444',
-        borderWidth: 2,
-        pointRadius: 0,
-        tension: 0.4,
-      },
-    ],
-  };
+  const prices = coin.sparkline_in_7d?.price || [];
+  const min = prices.length > 0 ? Math.min(...prices) : 0;
+  const max = prices.length > 0 ? Math.max(...prices) : 100;
+  const range = max - min === 0 ? 1 : max - min;
 
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: false },
-    },
-    scales: {
-      x: { display: false },
-      y: { display: false },
-    },
-  };
+  // Scale coordinates to fit a 100x40 viewBox with a 2px vertical padding
+  const points = prices.map((price, index) => {
+    const x = (index / Math.max(1, prices.length - 1)) * 100;
+    const y = 38 - ((price - min) / range) * 36;
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  });
+
+  const pathD = points.length > 0 ? `M ${points.join(' L ')}` : '';
 
   return (
     <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
@@ -69,8 +37,19 @@ const CryptoCard = ({ coin }) => {
             </div>
           </div>
         </div>
-        <div className="h-16 w-full">
-          <Line data={chartData} options={options} />
+        <div className="h-16 w-full overflow-hidden">
+          <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+            {pathD && (
+              <path
+                d={pathD}
+                fill="none"
+                stroke={priceChange24h > 0 ? '#10B981' : '#EF4444'}
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+          </svg>
         </div>
       </div>
     </div>

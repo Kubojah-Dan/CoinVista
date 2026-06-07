@@ -19,6 +19,7 @@ public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor,
     private static final String PROPERTY_SOURCE_NAME = "coinvistaDotenv";
     private static final List<Path> CANDIDATE_PATHS = List.of(
             Path.of(".env"),
+            Path.of("..", ".env"),
             Path.of("backend2", ".env"),
             Path.of("..", "backend2", ".env")
     );

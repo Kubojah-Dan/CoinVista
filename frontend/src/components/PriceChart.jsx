@@ -98,12 +98,12 @@ const PriceChart = ({ history, coinName = 'Bitcoin', comparisonHistory = [], com
   };
 
   return (
-    <div className="w-full h-[400px] p-4 bg-base-100 rounded-xl shadow-lg">
+    <div className="w-full h-[320px] sm:h-[400px] p-3 sm:p-4 bg-base-100 rounded-xl shadow-lg border border-base-200">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold">{coinName} Price Chart</h3>
-        {comparisonName && <span className="badge badge-outline">{coinName} vs {comparisonName}</span>}
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{coinName} Price Chart</h3>
+        {comparisonName && <span className="badge badge-outline text-xs">{coinName} vs {comparisonName}</span>}
       </div>
-      <div className="h-[300px]">
+      <div className="h-[220px] sm:h-[300px]">
         <Line data={data} options={options} />
       </div>
     </div>

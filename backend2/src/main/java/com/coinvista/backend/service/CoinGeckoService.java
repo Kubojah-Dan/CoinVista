@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -88,6 +89,84 @@ public class CoinGeckoService {
             .bodyToMono(Object.class)
             .block(), Map.of());
     }
+
+    public Object getCoinOhlc(String coinId, String currency, int days) {
+        return fetchCached("ohlc:" + coinId + ":" + currency + ":" + days, Duration.ofMinutes(2), () -> get()
+            .uri(u -> u.path("/coins/{id}/ohlc")
+                .queryParam("vs_currency", currency)
+                .queryParam("days", days)
+                .build(coinId))
+            .retrieve()
+            .bodyToMono(Object.class)
+            .block(), List.of());
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> getCoinOhlcv(String coinId, String currency, int days) {
+        Object ohlcRaw = getCoinOhlc(coinId, currency, days);
+        Object chartRaw = getCoinChart(coinId, currency, days);
+
+        List<List<Number>> ohlcList = new ArrayList<>();
+        if (ohlcRaw instanceof List<?> list) {
+            for (Object obj : list) {
+                if (obj instanceof List<?> item) {
+                    List<Number> candle = new ArrayList<>();
+                    for (Object val : item) {
+                        if (val instanceof Number num) {
+                            candle.add(num);
+                        }
+                    }
+                    if (candle.size() >= 5) {
+                        ohlcList.add(candle);
+                    }
+                }
+            }
+        }
+
+        List<List<Number>> volumeList = new ArrayList<>();
+        if (chartRaw instanceof Map<?, ?> map && map.get("total_volumes") instanceof List<?> list) {
+            for (Object obj : list) {
+                if (obj instanceof List<?> item && item.size() >= 2) {
+                    if (item.get(0) instanceof Number time && item.get(1) instanceof Number vol) {
+                        volumeList.add(List.of(time, vol));
+                    }
+                }
+            }
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (List<Number> candle : ohlcList) {
+            long candleTime = candle.get(0).longValue();
+            double open = candle.get(1).doubleValue();
+            double high = candle.get(2).doubleValue();
+            double low = candle.get(3).doubleValue();
+            double close = candle.get(4).doubleValue();
+
+            // Find nearest volume timestamp
+            double volume = 0.0;
+            double minDiff = Double.MAX_VALUE;
+            for (List<Number> volItem : volumeList) {
+                long volTime = volItem.get(0).longValue();
+                double diff = Math.abs(candleTime - volTime);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    volume = volItem.get(1).doubleValue();
+                }
+            }
+
+            Map<String, Object> candleMap = new LinkedHashMap<>();
+            candleMap.put("time", candleTime);
+            candleMap.put("open", open);
+            candleMap.put("high", high);
+            candleMap.put("low", low);
+            candleMap.put("close", close);
+            candleMap.put("volume", volume);
+            result.add(candleMap);
+        }
+
+        return result;
+    }
+
 
     public Object searchCoins(String query) {
         return get()

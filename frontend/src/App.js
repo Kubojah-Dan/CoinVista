@@ -17,6 +17,7 @@ import Watchlist from './pages/Watchlist';
 import CoinDetail from './pages/CoinDetail';
 
 import ProtectedRoute from './components/ProtectedRoute';
+import AgentChat from './components/AgentChat';
 
 function AppShell() {
     const location = useLocation();
@@ -25,7 +26,6 @@ function AppShell() {
     const isAuthRoute = ['/login', '/signup', '/register'].includes(location.pathname);
     const isLandingPage = location.pathname === '/';
     const showBottomNav = user && !isAuthRoute;
-    const isProtectedRoute = !isAuthRoute && !isLandingPage;
 
     return (
         <div className="min-h-screen bg-base-200 text-base-content transition-colors duration-300">
@@ -119,6 +119,7 @@ function AppShell() {
                 </Routes>
             </div>
             <Toaster position="top-right" />
+            {user && <AgentChat />}
             {showBottomNav && <BottomNav />}
         </div>
     );

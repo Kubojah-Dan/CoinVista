@@ -359,10 +359,15 @@ public class OAuthService {
     }
 
     private void writeCookie(HttpServletResponse response, String name, String value, Duration duration, boolean httpOnly) {
+        org.springframework.web.context.request.ServletRequestAttributes attributes = 
+                (org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        jakarta.servlet.http.HttpServletRequest request = attributes != null ? attributes.getRequest() : null;
+        boolean isSecure = request != null && (request.isSecure() || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto")));
+
         ResponseCookie cookie = ResponseCookie.from(name, value)
                 .httpOnly(httpOnly)
-                .secure(true)
-                .sameSite("Lax")
+                .secure(isSecure)
+                .sameSite(isSecure ? "None" : "Lax")
                 .path("/")
                 .maxAge(duration)
                 .build();

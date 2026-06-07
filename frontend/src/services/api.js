@@ -15,6 +15,30 @@ export const clearAccessToken = () => {
 
 export const getAccessToken = () => accessToken;
 
+export const getOrRefreshAccessToken = async () => {
+    if (!accessToken) return null;
+    try {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        const isExpired = payload.exp * 1000 - 30000 < Date.now();
+        if (isExpired) {
+            if (!refreshPromise) {
+                refreshPromise = refreshClient.post('/auth/refresh')
+                    .then((response) => {
+                        setAccessToken(response.data?.accessToken);
+                        return response;
+                    })
+                    .finally(() => {
+                        refreshPromise = null;
+                    });
+            }
+            await refreshPromise;
+        }
+    } catch (e) {
+        // Fallback to current token
+    }
+    return accessToken;
+};
+
 export const getApiBaseUrl = () => API_URL;
 
 const api = axios.create({
@@ -105,6 +129,8 @@ export const cryptoAPI = {
     getCoinDetails: (id) => api.get(`/crypto/coins/${id}`),
     getCoinChart: (id, { days = 7, currency = 'usd' }) =>
         api.get(`/crypto/coins/${id}/chart`, { params: { days, currency } }),
+    getCoinOhlcv: (id, { days = 7, currency = 'usd' } = {}) =>
+        api.get(`/crypto/coins/${id}/ohlcv`, { params: { days, currency } }),
     searchCoins: (query) => api.get('/crypto/search', { params: { query } }),
     getGlobalData: (currency = 'usd') => api.get('/crypto/global', { params: { currency } }),
     getTrendingCoins: () => api.get('/crypto/trending'),
@@ -128,10 +154,18 @@ export const paperTradingAPI = {
     getSummary: () => api.get('/paper-trading/summary'),
     placeTrade: (payload) => api.post('/paper-trading/trades', payload),
     reset: () => api.post('/paper-trading/reset'),
+    toggle: (paperTradingEnabled, liveTradingEnabled) =>
+        api.post('/paper-trading/toggle', null, { params: { paperTradingEnabled, liveTradingEnabled } }),
 };
 
 export const intelligenceAPI = {
     getInsights: (coinId) => api.get(`/intelligence/${coinId}`),
+};
+
+export const liveTradingAPI = {
+    getEligibility: () => api.get('/live-trading/eligibility'),
+    enable: (enable, activeExchange, apiKey, apiSecret) =>
+        api.post('/live-trading/enable', null, { params: { enable, activeExchange, apiKey, apiSecret } }),
 };
 
 export default api;

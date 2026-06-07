@@ -133,6 +133,12 @@ public class AuthService {
         if (request.getEmailNotificationsEnabled() != null) {
             user.setEmailNotificationsEnabled(request.getEmailNotificationsEnabled());
         }
+        if (request.getWhatsAppNotificationsEnabled() != null) {
+            user.setWhatsAppNotificationsEnabled(request.getWhatsAppNotificationsEnabled());
+        }
+        if (request.getPhoneNumber() != null) {
+            user.setPhoneNumber(request.getPhoneNumber().trim());
+        }
         if (request.getWalletAddress() != null) {
             user.setWalletAddress(request.getWalletAddress().trim());
         }
@@ -232,6 +238,8 @@ public class AuthService {
         profile.setAuthProvider(user.getAuthProvider());
         profile.setPrivacyModeEnabled(user.isPrivacyModeEnabled());
         profile.setEmailNotificationsEnabled(user.isEmailNotificationsEnabled());
+        profile.setWhatsAppNotificationsEnabled(user.isWhatsAppNotificationsEnabled());
+        profile.setPhoneNumber(user.getPhoneNumber());
         profile.setTwoFactorEnabled(user.isTwoFactorEnabled());
         profile.setPaperStartingBalance(user.getPaperStartingBalance());
         profile.setPaperCashBalance(user.getPaperCashBalance());

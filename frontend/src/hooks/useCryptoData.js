@@ -109,6 +109,33 @@ export const useCoinChart = (coinId, days = 7) => {
   return { chartData, loading, error, fetchChartData };
 };
 
+export const useCoinOhlcv = (coinId, days = 7) => {
+  const [ohlcvData, setOhlcvData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchOhlcvData = useCallback(async (id = coinId, chartDays = days) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await cryptoAPI.getCoinOhlcv(id, { days: chartDays });
+      setOhlcvData(response.data || []);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch OHLCV data');
+    } finally {
+      setLoading(false);
+    }
+  }, [coinId, days]);
+
+  useEffect(() => {
+    if (coinId) {
+      fetchOhlcvData();
+    }
+  }, [coinId, days, fetchOhlcvData]);
+
+  return { ohlcvData, loading, error, fetchOhlcvData };
+};
+
 export const useWatchlist = () => {
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);

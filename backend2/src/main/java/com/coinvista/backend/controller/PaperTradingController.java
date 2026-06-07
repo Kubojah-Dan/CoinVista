@@ -32,4 +32,13 @@ public class PaperTradingController {
     public ResponseEntity<PaperTradingDto.Summary> reset(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(paperTradingService.reset(user.getId()));
     }
+
+    @PostMapping("/toggle")
+    public ResponseEntity<PaperTradingDto.Summary> toggleAgentExecution(
+            @AuthenticationPrincipal User user,
+            @RequestParam boolean paperTradingEnabled,
+            @RequestParam boolean liveTradingEnabled) {
+        paperTradingService.updateAgentExecutionToggle(user.getId(), paperTradingEnabled, liveTradingEnabled);
+        return ResponseEntity.ok(paperTradingService.getSummary(user.getId()));
+    }
 }
