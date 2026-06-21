@@ -8,5 +8,6 @@ import java.util.List;
 public interface ClosedTradeRepository extends MongoRepository<ClosedTrade, String> {
     List<ClosedTrade> findByUserIdOrderByClosedAtDesc(String userId);
     List<ClosedTrade> findByUserIdAndStrategy(String userId, String strategy);
+    List<ClosedTrade> findByUserIdAndClosedAtAfterOrderByClosedAtDesc(String userId, java.time.Instant after);
     void deleteByUserId(String userId);
 }

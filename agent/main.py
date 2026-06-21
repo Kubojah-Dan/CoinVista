@@ -28,6 +28,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from strategy.routes import router as strategy_router
+app.include_router(strategy_router)
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 class ChatRequest(BaseModel):
@@ -115,6 +118,31 @@ async def chat_endpoint(request: ChatRequest, authorization: Optional[str] = Hea
     Exposes the streaming AI Agent assistant route.
     """
     print(f"DEBUG: Incoming Authorization header: {repr(authorization)}")
+    
+    # ── Quota Check ───────────────────────────────────────────────────────────
+    try:
+        quota_url = "http://127.0.0.1:5000/api/billing/quota/use-ai"
+        headers = {}
+        if authorization:
+            headers["Authorization"] = authorization
+        
+        response = requests.post(quota_url, headers=headers, timeout=5)
+        if response.status_code in [401, 403]:
+            raise HTTPException(status_code=response.status_code, detail="Authentication failed with backend")
+        
+        if response.status_code == 200:
+            res_data = response.json()
+            if not res_data.get("allowed", True):
+                raise HTTPException(
+                    status_code=402,
+                    detail="AI Query quota exceeded. Please upgrade your subscription tier in the Settings page to continue."
+                )
+        else:
+            print(f"WARNING: Quota check backend returned status {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"ERROR: Backend connection failed during quota check: {str(e)}")
+        # Proceed in case of backend communication breakdown to keep app resilient
+    
     return StreamingResponse(
         stream_agent_events(request.message, request.history, authorization),
         media_type="text/event-stream"
@@ -135,6 +163,131 @@ async def get_indicators_endpoint(coinId: str = Query(...), days: int = Query(30
         return computed
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"TA indicator calculation failed: {str(e)}")
+
+class AnalyzeTradeRequest(BaseModel):
+    tradeId: str
+    coinId: str
+    symbol: str
+    name: str
+    side: str
+    entryPrice: float
+    exitPrice: float
+    size: float
+    stopLoss: Optional[float] = None
+    takeProfit: Optional[float] = None
+    pnl: float
+    pnlPercent: float
+    strategy: Optional[str] = None
+    closeReason: Optional[str] = None
+    preTradeThesis: Optional[str] = None
+    preTradeInvalidation: Optional[str] = None
+    preTradeRnR: Optional[float] = None
+
+@app.post("/api/agent/analyze-trade")
+def analyze_trade_endpoint(request: AnalyzeTradeRequest):
+    """
+    Invokes LLM quantitative trading mentor to analyze a completed trade.
+    """
+    from journal.trade_analyzer import analyze_completed_trade
+    
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY environment variable is not configured.")
+        
+    analysis = analyze_completed_trade(request.model_dump(), GROQ_API_KEY)
+    return analysis
+
+class WeeklyReviewRequest(BaseModel):
+    trades: List[Dict]
+    userEmail: str
+
+@app.post("/api/agent/generate-weekly-review")
+def generate_weekly_review_endpoint(request: WeeklyReviewRequest):
+    """
+    Invokes LLM quantitative trading mentor to generate a weekly performance review.
+    """
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY environment variable is not configured.")
+        
+    llm = ChatGroq(
+        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        temperature=0.3,
+        groq_api_key=GROQ_API_KEY
+    )
+    
+    system_prompt = (
+        "You are an expert quantitative trading psychologist and portfolio manager.\n"
+        "Your task is to write a highly professional, constructive, and detailed Weekly Performance Review "
+        "in Markdown format based on the user's completed trades from the past week.\n\n"
+        "The review must include:\n"
+        "1. **Weekly Executive Summary**: Analysis of overall profitability, win rate, and total trades.\n"
+        "2. **Strategy Performance**: Evaluation of which strategies performed best/worst (e.g. Breakout vs Mean Reversion).\n"
+        "3. **Execution & Risk Management**: Feedback on stop-loss discipline, average risk-to-reward ratios, and whether the trader adhered to their initial theses.\n"
+        "4. **Psychological & Emotional Insights**: Observations on patience, greed, or fear based on trade holding times and close reasons.\n"
+        "5. **Actionable Recommendations**: 3 concrete, mathematical suggestions for the upcoming week.\n\n"
+        "Be encouraging, quantitative, and precise. Use professional trading terminology."
+    )
+    
+    human_prompt = f"Here is the user's completed trades list for the past week:\n{json.dumps(request.trades, indent=2)}"
+    
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=human_prompt)
+    ]
+    
+    try:
+        response = llm.invoke(messages)
+        return {"report": response.content}
+    except Exception as e:
+        print(f"ERROR: Weekly review generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi import WebSocket, WebSocketDisconnect
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+            except Exception:
+                pass
+
+manager = ConnectionManager()
+
+async def run_whale_indexer():
+    import random
+    from onchain.whale_indexer import WhaleIndexer
+    indexer = WhaleIndexer()
+    while True:
+        try:
+            if manager.active_connections:
+                alert = await indexer.generate_whale_alert()
+                await manager.broadcast(json.dumps(alert))
+        except Exception as e:
+            print(f"Error in whale indexer: {e}")
+        await asyncio.sleep(random.uniform(6.0, 12.0))
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(run_whale_indexer())
+
+@app.websocket("/api/agent/ws/whale-alerts")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 @app.get("/health")
 def health():

@@ -1,44 +1,64 @@
 {
     "name": "coinvista-frontend",
-    "version": "0.1.0",
+    "version": "2.0.0",
     "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "start": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "lint": "eslint src --ext js,jsx,ts,tsx --report-unused-disable-directives --max-warnings 0"
+    },
     "dependencies": {
+        "@rainbow-me/rainbowkit": "^2.2.4",
         "@stomp/stompjs": "^7.3.0",
-        "@testing-library/jest-dom": "^5.17.0",
-        "@testing-library/react": "^13.4.0",
-        "@testing-library/user-event": "^13.5.0",
+        "@tanstack/react-query": "^5.56.2",
+        "@tanstack/react-query-devtools": "^5.56.2",
         "axios": "^1.6.2",
         "chart.js": "^4.4.1",
         "clsx": "^2.1.1",
         "daisyui": "^4.4.19",
+        "ethers": "^6.17.0",
         "framer-motion": "^10.16.16",
         "lightweight-charts": "^5.2.0",
         "lucide-react": "^0.562.0",
-        "react": "^18.2.0",
+        "react": "^18.3.1",
         "react-chartjs-2": "^5.2.0",
-        "react-dom": "^18.2.0",
+        "react-dom": "^18.3.1",
         "react-hot-toast": "^2.4.1",
         "react-icons": "^4.12.0",
         "react-router-dom": "^6.20.0",
-        "react-scripts": "5.0.1",
         "react-toastify": "^11.0.5",
+        "reactflow": "^11.11.4",
         "recharts": "^2.10.3",
+        "siwe": "^2.3.2",
         "socket.io-client": "^4.8.3",
         "sockjs-client": "^1.6.1",
         "tailwind-merge": "^3.4.0",
         "tailwindcss-animate": "^1.0.7",
+        "viem": "^2.21.19",
+        "wagmi": "^2.12.17",
         "web-vitals": "^2.1.4"
     },
-    "scripts": {
-        "start": "react-scripts start",
-        "build": "react-scripts build",
-        "test": "react-scripts test",
-        "eject": "react-scripts eject"
+    "devDependencies": {
+        "@types/node": "^26.0.0",
+        "@types/react": "^18.3.5",
+        "@types/react-dom": "^18.3.0",
+        "@vitejs/plugin-react": "^4.3.1",
+        "autoprefixer": "^10.4.16",
+        "eslint": "^8.57.0",
+        "eslint-plugin-react-hooks": "^4.6.2",
+        "eslint-plugin-react-refresh": "^0.4.11",
+        "postcss": "^8.4.32",
+        "tailwindcss": "^3.3.6",
+        "typescript": "^5.5.3",
+        "vite": "^5.4.8",
+        "vite-plugin-node-polyfills": "^0.22.0"
     },
     "eslintConfig": {
         "extends": [
-            "react-app",
-            "react-app/jest"
+            "react-app"
         ]
     },
     "browserslist": {
@@ -52,10 +72,5 @@
             "last 1 firefox version",
             "last 1 safari version"
         ]
-    },
-    "devDependencies": {
-        "autoprefixer": "^10.4.16",
-        "postcss": "^8.4.32",
-        "tailwindcss": "^3.3.6"
     }
 }

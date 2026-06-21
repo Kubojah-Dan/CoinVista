@@ -5,6 +5,8 @@ import com.coinvista.backend.model.*;
 import com.coinvista.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -23,6 +25,14 @@ public class PaperTradingService {
     private final ClosedTradeRepository closedTradeRepository;
     private final AgentPerformanceRepository agentPerformanceRepository;
     private final CoinGeckoService coinGeckoService;
+    private final TradeAnalysisService tradeAnalysisService;
+
+    @Autowired
+    @Lazy
+    private CopyTradingService copyTradingService;
+
+    @Autowired
+    private GamificationService gamificationService;
 
     public PaperTradingDto.Summary getSummary(String userId) {
         User user = getUser(userId);
@@ -84,6 +94,9 @@ public class PaperTradingService {
             view.setStopLoss(pos.getStopLoss() != null ? round(pos.getStopLoss()) : null);
             view.setTakeProfit(pos.getTakeProfit() != null ? round(pos.getTakeProfit()) : null);
             view.setStrategy(pos.getStrategy());
+            view.setPreTradeThesis(pos.getPreTradeThesis());
+            view.setPreTradeInvalidation(pos.getPreTradeInvalidation());
+            view.setPreTradeRnR(pos.getPreTradeRnR() != null ? round(pos.getPreTradeRnR()) : null);
             view.setOpenedAt(pos.getOpenedAt());
             positionViews.add(view);
 
@@ -159,6 +172,9 @@ public class PaperTradingService {
                 pos.setStopLoss(request.getStopLoss());
                 pos.setTakeProfit(request.getTakeProfit());
                 pos.setStrategy(request.getStrategy() != null ? request.getStrategy() : "Manual");
+                pos.setPreTradeThesis(request.getPreTradeThesis());
+                pos.setPreTradeInvalidation(request.getPreTradeInvalidation());
+                pos.setPreTradeRnR(request.getPreTradeRnR());
 
                 if (existingOpt.isPresent()) {
                     // Accumulate size and calculate average entry price
@@ -202,6 +218,9 @@ public class PaperTradingService {
                 pos.setStopLoss(request.getStopLoss());
                 pos.setTakeProfit(request.getTakeProfit());
                 pos.setStrategy(request.getStrategy() != null ? request.getStrategy() : "Manual");
+                pos.setPreTradeThesis(request.getPreTradeThesis());
+                pos.setPreTradeInvalidation(request.getPreTradeInvalidation());
+                pos.setPreTradeRnR(request.getPreTradeRnR());
 
                 if (existingOpt.isPresent()) {
                     double newSize = pos.getSize() + request.getQuantity();
@@ -215,6 +234,20 @@ public class PaperTradingService {
                 }
                 paperPositionRepository.save(pos);
             }
+        }
+
+        if (!"CopyTrading".equalsIgnoreCase(request.getStrategy())) {
+            try {
+                copyTradingService.executeCopyTrades(userId, request);
+            } catch (Exception e) {
+                log.error("Failed to execute copy trades for user {}", userId, e);
+            }
+        }
+
+        try {
+            gamificationService.awardXP(userId, 10);
+        } catch (Exception e) {
+            log.error("Failed to award trade XP", e);
         }
 
         return getSummary(userId);
@@ -250,6 +283,9 @@ public class PaperTradingService {
         trade.setStopLoss(pos.getStopLoss());
         trade.setTakeProfit(pos.getTakeProfit());
         trade.setStrategy(pos.getStrategy());
+        trade.setPreTradeThesis(pos.getPreTradeThesis());
+        trade.setPreTradeInvalidation(pos.getPreTradeInvalidation());
+        trade.setPreTradeRnR(pos.getPreTradeRnR());
         trade.setOpenedAt(pos.getOpenedAt());
         trade.setClosedAt(Instant.now());
         trade.setPnl(pnl);
@@ -258,6 +294,20 @@ public class PaperTradingService {
         trade.setPnlPercent(pnlPct);
         trade.setCloseReason(closeReason);
         closedTradeRepository.save(trade);
+
+        // Trigger gamification badge evaluation
+        try {
+            gamificationService.evaluateTradeForBadges(pos.getUserId(), trade);
+        } catch (Exception ex) {
+            log.error("Failed to evaluate trade for badges", ex);
+        }
+
+        // Trigger AI quantitative mentor trade analysis
+        try {
+            tradeAnalysisService.analyzeTradeAsync(trade);
+        } catch (Exception ex) {
+            log.error("Failed to trigger trade analysis task", ex);
+        }
 
         // Update position size or delete
         if (pos.getSize() <= closeQty) {
@@ -405,6 +455,9 @@ public class PaperTradingService {
         view.setPnlPercent(round(trade.getPnlPercent()));
         view.setStrategy(trade.getStrategy());
         view.setCloseReason(trade.getCloseReason());
+        view.setPreTradeThesis(trade.getPreTradeThesis());
+        view.setPreTradeInvalidation(trade.getPreTradeInvalidation());
+        view.setPreTradeRnR(trade.getPreTradeRnR() != null ? round(trade.getPreTradeRnR()) : null);
         view.setOpenedAt(trade.getOpenedAt());
         view.setClosedAt(trade.getClosedAt());
         return view;

@@ -29,6 +29,9 @@ public class PaperTradingDto {
         private Double stopLoss;
         private Double takeProfit;
         private String strategy;
+        private String preTradeThesis;
+        private String preTradeInvalidation;
+        private Double preTradeRnR;
     }
 
     @Data
@@ -47,6 +50,9 @@ public class PaperTradingDto {
         private Double pnlPercent;
         private String strategy;
         private String closeReason;
+        private String preTradeThesis;
+        private String preTradeInvalidation;
+        private Double preTradeRnR;
         private Instant openedAt;
         private Instant closedAt;
     }
@@ -67,6 +73,9 @@ public class PaperTradingDto {
         private Double stopLoss;
         private Double takeProfit;
         private String strategy;
+        private String preTradeThesis;
+        private String preTradeInvalidation;
+        private Double preTradeRnR;
         private Instant openedAt;
     }
 

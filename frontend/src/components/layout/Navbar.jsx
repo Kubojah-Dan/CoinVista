@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaBars, FaTimes, FaWallet } from 'react-icons/fa';
+import { FaBars, FaTimes } from 'react-icons/fa';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import logoSvg from '../../assets/logo.svg';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { Button } from '../common/Button';
@@ -9,34 +10,18 @@ import { useAuth } from '../../context/AuthContext';
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
-    const { user, logout, updateSettings } = useAuth();
-
-    const connectWallet = async () => {
-        if (!window.ethereum) {
-            alert('MetaMask or another EVM wallet is required for wallet connection.');
-            return;
-        }
-
-        try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const address = accounts?.[0];
-            if (address) {
-                await updateSettings({ walletAddress: address });
-            }
-        } catch (error) {
-            console.error('Wallet connection failed:', error);
-        }
-    };
+    const { user, logout } = useAuth();
 
     const navigation = [
         { name: 'Home', href: '/' },
         { name: 'Dashboard', href: '/dashboard' },
         { name: 'Markets', href: '/markets' },
         { name: 'Simulator', href: '/simulator' },
+        { name: 'Strategy Builder', href: '/strategy-builder' },
         { name: 'Trending', href: '/trending' },
         { name: 'Watchlist', href: '/watchlist' },
         { name: 'Alerts', href: '/alerts' },
-        { name: 'Settings', href: '/settings' },
+        { name: 'Pricing', href: '/pricing' },
     ];
 
     const isActive = (path) => location.pathname === path;
@@ -51,49 +36,76 @@ const Navbar = () => {
                         <span>CoinVista</span>
                     </Link>
 
-                    {/* Desktop Menu - Only visible when logged in */}
+                    {/* Desktop Menu — Only visible when logged in */}
                     {user && (
-                    <div className="hidden md:flex items-center space-x-8">
-                        {navigation.map((item) => (
-                            <Link
-                                key={item.name}
-                                to={item.href}
-                                className={`text-sm font-medium transition-colors duration-200 ${isActive(item.href)
-                                    ? 'text-primary'
-                                    : 'text-gray-600 dark:text-gray-300 hover:text-primary'
+                        <div className="hidden md:flex items-center space-x-6">
+                            {navigation.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    to={item.href}
+                                    className={`text-sm font-medium transition-colors duration-200 ${
+                                        isActive(item.href)
+                                            ? 'text-primary'
+                                            : 'text-gray-600 dark:text-gray-300 hover:text-primary'
                                     }`}
-                            >
-                                {item.name}
-                            </Link>
-                        ))}
-                    </div>
+                                >
+                                    {item.name}
+                                </Link>
+                            ))}
+                        </div>
                     )}
 
                     {/* Right Side Actions */}
-                    <div className="hidden md:flex items-center space-x-4">
-                        <ThemeToggle />
-
+                    <div className="hidden md:flex items-center space-x-3">
                         {user ? (
-                            <div className="flex items-center gap-4">
-                                {user.walletAddress ? (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-mono">
-                                        <FaWallet className="w-3.5 h-3.5" />
-                                        <span>{`${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`}</span>
-                                    </div>
-                                ) : (
-                                    <button 
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-dark-200 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-700 text-xs transition-all duration-200" 
-                                        onClick={connectWallet}
-                                    >
-                                        <FaWallet className="w-3.5 h-3.5" />
-                                        <span>Connect Wallet</span>
-                                    </button>
-                                )}
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Hi, {user.name}</span>
-                                <Button variant="outline" size="sm" onClick={logout}>Logout</Button>
+                            <div className="flex items-center gap-3">
+                                {/* ConnectButton */}
+                                <ConnectButton
+                                    accountStatus="avatar"
+                                    chainStatus="icon"
+                                    showBalance={false}
+                                    label="Connect Wallet"
+                                />
+
+                                {/* Profile Dropdown */}
+                                <div className="dropdown dropdown-end">
+                                    <label tabIndex={0} className="btn btn-ghost btn-circle avatar placeholder">
+                                        <div className="w-10 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center justify-center font-bold">
+                                            {user.avatarUrl ? (
+                                                <img src={user.avatarUrl} alt={user.name} />
+                                            ) : (
+                                                user.name.slice(0, 2).toUpperCase()
+                                            )}
+                                        </div>
+                                    </label>
+                                    <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[100] p-2 shadow-2xl glass-card rounded-box w-56 space-y-2 text-gray-700 dark:text-gray-200">
+                                        <li className="px-3 py-2 border-b border-base-200 dark:border-white/10">
+                                            <div className="flex flex-col items-start p-0">
+                                                <span className="font-bold text-gray-900 dark:text-white">{user.name}</span>
+                                                <span className="text-[10px] text-gray-500">{user.email}</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <Link to="/settings" className="flex justify-between">
+                                                Settings
+                                            </Link>
+                                        </li>
+                                        <li className="flex flex-row items-center justify-between px-3 py-2 hover:bg-transparent">
+                                            <span className="text-xs text-gray-500 p-0">Theme Mode</span>
+                                            <ThemeToggle />
+                                        </li>
+                                        <div className="divider my-1" />
+                                        <li>
+                                            <button onClick={logout} className="text-red-500 active:bg-red-500/10">
+                                                Logout
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         ) : (
-                            <div className="flex space-x-2">
+                            <div className="flex items-center space-x-2">
+                                <ThemeToggle />
                                 <Link to="/login">
                                     <Button variant="ghost" size="sm">Login</Button>
                                 </Link>
@@ -104,13 +116,26 @@ const Navbar = () => {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button - Only show when logged in */}
-                    <div className="md:hidden flex items-center gap-4">
+                    {/* Mobile Menu Button */}
+                    <div className="md:hidden flex items-center gap-3">
                         <ThemeToggle />
                         {user && (
-                            <button onClick={() => setIsOpen(!isOpen)} className="text-gray-600 dark:text-gray-300">
-                                {isOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
-                            </button>
+                            <>
+                                {/* Compact wallet button on mobile */}
+                                <ConnectButton
+                                    accountStatus="avatar"
+                                    chainStatus="none"
+                                    showBalance={false}
+                                    label="🔗"
+                                />
+                                <button
+                                    onClick={() => setIsOpen(!isOpen)}
+                                    className="text-gray-600 dark:text-gray-300 p-1"
+                                    aria-label="Toggle mobile menu"
+                                >
+                                    {isOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
@@ -124,13 +149,19 @@ const Navbar = () => {
                             <Link
                                 key={item.name}
                                 to={item.href}
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-200"
+                                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                                    isActive(item.href)
+                                        ? 'text-primary bg-primary/10'
+                                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-200'
+                                }`}
                                 onClick={() => setIsOpen(false)}
                             >
                                 {item.name}
                             </Link>
                         ))}
-                        <div className="divider"></div>
+
+                        <div className="divider" />
+
                         {!user && (
                             <div className="flex flex-col space-y-2 px-3 mt-2">
                                 <Link to="/login" onClick={() => setIsOpen(false)}>
@@ -141,27 +172,27 @@ const Navbar = () => {
                                 </Link>
                             </div>
                         )}
+
                         {user && (
-                            <div className="flex flex-col space-y-2 px-3 mt-2">
-                                {user.walletAddress ? (
-                                    <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 text-primary border border-primary/20 text-sm font-mono">
-                                        <div className="flex items-center gap-2">
-                                            <FaWallet className="w-4 h-4" />
-                                            <span>Wallet Connected</span>
-                                        </div>
-                                        <span className="text-xs bg-primary/20 px-2 py-0.5 rounded">{`${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`}</span>
-                                    </div>
-                                ) : (
-                                    <button 
-                                        className="flex items-center justify-center gap-2 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-200 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-700 text-sm transition-all duration-200 w-full" 
-                                        onClick={() => { connectWallet(); setIsOpen(false); }}
+                            <>
+                                <Link
+                                    to="/settings"
+                                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-200"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Settings
+                                </Link>
+                                <div className="divider my-1" />
+                                <div className="px-3 mt-2">
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={() => { logout(); setIsOpen(false); }}
                                     >
-                                        <FaWallet className="w-4 h-4" />
-                                        <span>Connect MetaMask Wallet</span>
-                                    </button>
-                                )}
-                                <Button variant="outline" onClick={() => { logout(); setIsOpen(false); }}>Logout</Button>
-                            </div>
+                                        Logout
+                                    </Button>
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>

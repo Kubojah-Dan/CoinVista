@@ -28,6 +28,8 @@ public class AuthDto {
 
     @Data
     public static class UpdateSettingsRequest {
+        private String name;
+        private String avatarUrl;
         private Boolean privacyModeEnabled;
         private Boolean emailNotificationsEnabled;
         private Boolean whatsAppNotificationsEnabled;
@@ -60,9 +62,15 @@ public class AuthDto {
         private Double paperStartingBalance;
         private Double paperCashBalance;
         private String walletAddress;
+        private boolean walletVerified;
+        private Long walletChainId;
         private boolean emailVerified;
         private int watchlistCount;
         private int alertCount;
+        private String planId;
+        private String planName;
+        private String subscriptionStatus;
+        private Long subscriptionPeriodEnd; // Epoch seconds
     }
 
     @Data
@@ -78,5 +86,21 @@ public class AuthDto {
         private String secret;
         private String otpauthUrl;
         private String issuer;
+    }
+
+    /** Returned by GET /api/auth/siwe/nonce */
+    @Data
+    public static class SiweNonceResponse {
+        private String nonce;
+        private String issuedAt;
+    }
+
+    /** Request body for POST /api/auth/siwe/verify */
+    @Data
+    public static class SiweVerifyRequest {
+        @NotBlank(message = "SIWE message is required")
+        private String message;
+        @NotBlank(message = "Signature is required")
+        private String signature;
     }
 }

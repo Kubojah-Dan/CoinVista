@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 let accessToken = null;
 let refreshPromise = null;
@@ -156,6 +156,10 @@ export const paperTradingAPI = {
     reset: () => api.post('/paper-trading/reset'),
     toggle: (paperTradingEnabled, liveTradingEnabled) =>
         api.post('/paper-trading/toggle', null, { params: { paperTradingEnabled, liveTradingEnabled } }),
+    getTradeAnalysis: (tradeId) => api.get(`/paper-trading/trades/${tradeId}/analysis`),
+    getInbox: () => api.get('/paper-trading/inbox'),
+    markInboxRead: (id) => api.patch(`/paper-trading/inbox/${id}/read`),
+    triggerWeeklyReview: () => api.post('/paper-trading/weekly-review/trigger'),
 };
 
 export const intelligenceAPI = {
@@ -166,6 +170,32 @@ export const liveTradingAPI = {
     getEligibility: () => api.get('/live-trading/eligibility'),
     enable: (enable, activeExchange, apiKey, apiSecret) =>
         api.post('/live-trading/enable', null, { params: { enable, activeExchange, apiKey, apiSecret } }),
+};
+
+export const billingAPI = {
+    checkout: (payload) => api.post('/billing/checkout', payload),
+    portal: (payload) => api.post('/billing/portal', payload),
+};
+
+export const strategiesAPI = {
+    getAll: () => api.get('/strategies'),
+    create: (payload) => api.post('/strategies', payload),
+    update: (id, payload) => api.put(`/strategies/${id}`, payload),
+    delete: (id) => api.delete(`/strategies/${id}`),
+};
+
+export const socialAPI = {
+    getLeaderboard: () => api.get('/social/leaderboard'),
+    getProfile: (userId) => api.get(`/social/profile/${userId}`),
+    follow: (userId) => api.post(`/social/follow/${userId}`),
+    unfollow: (userId) => api.post(`/social/unfollow/${userId}`),
+    updateCopyConfig: (payload) => api.post('/social/copy-config', payload),
+    getFollowing: () => api.get('/social/following'),
+    getFollowers: () => api.get('/social/followers'),
+};
+
+export const gamificationAPI = {
+    getXP: () => api.get('/gamification/xp'),
 };
 
 export default api;

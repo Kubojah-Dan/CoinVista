@@ -107,6 +107,62 @@ const Home = () => {
                     </Link>
                 </motion.div>
             </section>
+            {/* Footer */}
+            <footer className="w-full mt-20 border-t border-white/20 dark:border-white/5 bg-white/30 dark:bg-black/25 backdrop-blur-xl py-12 relative z-10">
+                <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
+                    {/* Brand Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center space-x-2 text-xl font-bold bg-gradient-primary text-transparent bg-clip-text">
+                            <span className="text-gray-900 dark:text-white font-extrabold">CoinVista</span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-sans">
+                            A premium full-stack crypto intelligence workspace combining real-time analytics, paper trading, and AI quant feedback.
+                        </p>
+                    </div>
+
+                    {/* Features Links */}
+                    <div>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4 font-sans">Core Platform</h4>
+                        <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400 font-sans">
+                            <li><Link to="/markets" className="hover:text-primary transition-colors">Market Analytics</Link></li>
+                            <li><Link to="/simulator" className="hover:text-primary transition-colors">Paper Trading</Link></li>
+                            <li><Link to="/strategy-builder" className="hover:text-primary transition-colors">Strategy Builder</Link></li>
+                            <li><Link to="/pricing" className="hover:text-primary transition-colors">Premium Plans</Link></li>
+                        </ul>
+                    </div>
+
+                    {/* Security Links */}
+                    <div>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4 font-sans">Integrations</h4>
+                        <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400 font-sans">
+                            <li><span className="text-gray-500">RainbowKit & Wagmi v2</span></li>
+                            <li><span className="text-gray-500">Stripe Billing Portal</span></li>
+                            <li><span className="text-gray-500">Groq AI Llama 3.3 70B</span></li>
+                            <li><span className="text-gray-500">Zoho Catalyst AppSail</span></li>
+                        </ul>
+                    </div>
+
+                    {/* Newsletter / Legal */}
+                    <div>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4 font-sans">Compliance</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-4 font-sans">
+                            All trading features are simulated. Live trading requires completing safety challenges. AES-256-GCM encryption is used for credentials.
+                        </p>
+                        <div className="flex gap-4 text-xs text-gray-500 font-sans">
+                            <span className="hover:underline cursor-pointer">Privacy Policy</span>
+                            <span>•</span>
+                            <span className="hover:underline cursor-pointer">Terms of Service</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="container mx-auto px-6 mt-12 pt-6 border-t border-white/10 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 font-sans">
+                    <p>© {new Date().getFullYear()} CoinVista. All rights reserved.</p>
+                    <p className="flex items-center gap-1">
+                        Made with 💜 for recruiters and builders.
+                    </p>
+                </div>
+            </footer>
         </div>
     );
 };

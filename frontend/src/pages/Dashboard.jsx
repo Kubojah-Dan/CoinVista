@@ -15,6 +15,7 @@ import {
     Wallet,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAccount, useBalance } from 'wagmi';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../context/AuthContext';
 import { useCryptoData } from '../hooks/useCryptoData';
@@ -23,6 +24,7 @@ import { PortfolioChart } from '../components/dashboard/PortfolioChart';
 import { AllocationChart } from '../components/dashboard/AllocationChart';
 import { HoldingsTable } from '../components/dashboard/HoldingsTable';
 import { AddHoldingModal } from '../components/dashboard/AddHoldingModal';
+import WhaleAlertMarquee from '../components/dashboard/WhaleAlertMarquee';
 import { formatCurrency, formatNumber, formatPercentage, toSafeNumber } from '../utils/format';
 
 const maskCurrency = (value, hidden) => (hidden ? '••••••' : formatCurrency(value));
@@ -57,7 +59,11 @@ const Dashboard = () => {
         return () => window.removeEventListener('openAddHolding', handleOpenAdd);
     }, []);
     const [downloadingReport, setDownloadingReport] = useState(false);
-    const [walletBalance, setWalletBalance] = useState(null);
+
+    // Wagmi hooks — replaces the old manual window.ethereum calls
+    const { address: wagmiAddress, isConnected } = useAccount();
+    const { data: balanceData } = useBalance({ address: wagmiAddress });
+    const walletBalance = isConnected && balanceData ? parseFloat(balanceData.formatted) : null;
 
     const [currency, setCurrency] = useState('usd');
     const { coins, loading: coinsLoading, page, fetchCoins, nextPage, prevPage } = useCryptoData();
@@ -101,29 +107,6 @@ const Dashboard = () => {
         loadPortfolio();
         loadPaperSummary();
     }, []);
-
-    const fetchWalletBalance = async (address) => {
-        if (!window.ethereum || !address) {
-            return;
-        }
-
-        try {
-            const balanceHex = await window.ethereum.request({
-                method: 'eth_getBalance',
-                params: [address, 'latest'],
-            });
-            const balance = Number.parseInt(balanceHex, 16) / 1e18;
-            setWalletBalance(balance);
-        } catch (error) {
-            setWalletBalance(null);
-        }
-    };
-
-    useEffect(() => {
-        if (user?.walletAddress) {
-            fetchWalletBalance(user.walletAddress);
-        }
-    }, [user?.walletAddress]);
 
     const filteredCoins = useMemo(() => {
         if (!searchQuery) {
@@ -183,24 +166,6 @@ const Dashboard = () => {
         await refreshUser();
     };
 
-    const connectWallet = async () => {
-        if (!window.ethereum) {
-            window.alert('MetaMask or another EVM wallet is required for wallet connection.');
-            return;
-        }
-
-        try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const address = accounts?.[0];
-            if (address) {
-                await updateSettings({ walletAddress: address });
-                await refreshUser();
-                await fetchWalletBalance(address);
-            }
-        } catch (error) {
-            window.alert('Wallet connection was cancelled or failed.');
-        }
-    };
 
     const downloadPortfolioReport = async () => {
         setDownloadingReport(true);
@@ -252,10 +217,6 @@ const Dashboard = () => {
                                 {hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                                 {hidden ? 'Show balances' : 'Hide balances'}
                             </button>
-                            <button className="btn btn-outline btn-sm" onClick={connectWallet}>
-                                <Wallet className="h-4 w-4" />
-                                {user?.walletAddress ? 'Reconnect wallet' : 'Connect wallet'}
-                            </button>
                             <button className="btn btn-primary btn-sm" onClick={downloadPortfolioReport} disabled={downloadingReport}>
                                 <Download className="h-4 w-4" />
                                 {downloadingReport ? 'Exporting...' : 'Export CSV'}
@@ -263,6 +224,8 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </motion.div>
+
+                <WhaleAlertMarquee />
 
                 <div className="mb-6 md:mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     <StatCard
@@ -309,13 +272,13 @@ const Dashboard = () => {
                                 <p>Paper trading cash: {hidden ? '••••' : formatCurrency(paperSummary.cashBalance)}</p>
                             </div>
                             <div className="mt-4 flex flex-wrap gap-3">
-                                {process.env.REACT_APP_MOONPAY_URL && (
-                                    <a className="btn btn-sm btn-outline" href={process.env.REACT_APP_MOONPAY_URL} target="_blank" rel="noreferrer">
+                                {import.meta.env.VITE_MOONPAY_URL && (
+                                    <a className="btn btn-sm btn-outline" href={import.meta.env.VITE_MOONPAY_URL} target="_blank" rel="noreferrer">
                                         MoonPay Sandbox
                                     </a>
                                 )}
-                                {process.env.REACT_APP_TRANSAK_URL && (
-                                    <a className="btn btn-sm btn-outline" href={process.env.REACT_APP_TRANSAK_URL} target="_blank" rel="noreferrer">
+                                {import.meta.env.VITE_TRANSAK_URL && (
+                                    <a className="btn btn-sm btn-outline" href={import.meta.env.VITE_TRANSAK_URL} target="_blank" rel="noreferrer">
                                         Transak Sandbox
                                     </a>
                                 )}

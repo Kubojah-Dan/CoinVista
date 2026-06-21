@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Data
 @Document(collection = "users")
 public class User {
@@ -48,6 +49,18 @@ public class User {
     private String encryptedPendingTotpSecret;
 
     private String walletAddress;
+
+    /** SIWE nonce — single-use random hex string for challenge-response */
+    private String siweNonce;
+
+    /** True once the user has signed a SIWE message proving ownership of walletAddress */
+    private boolean walletVerified = false;
+
+    /** Timestamp when wallet was last verified via SIWE */
+    private Instant walletLinkedAt;
+
+    /** Chain ID the wallet was on when SIWE was verified */
+    private Long walletChainId;
 
     private Double paperStartingBalance = 10000.0;
 

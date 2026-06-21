@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/crypto/global").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/health").permitAll()
+                .requestMatchers("/api/billing/webhook").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

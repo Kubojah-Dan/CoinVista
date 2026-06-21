@@ -8,9 +8,14 @@ import com.coinvista.backend.repository.HoldingRepository;
 import com.coinvista.backend.repository.PaperTradeRepository;
 import com.coinvista.backend.repository.RefreshSessionRepository;
 import com.coinvista.backend.repository.UserRepository;
+import com.coinvista.backend.model.Plan;
+import com.coinvista.backend.model.Subscription;
+import com.coinvista.backend.repository.PlanRepository;
+import com.coinvista.backend.repository.SubscriptionRepository;
 import com.coinvista.backend.security.JwtUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +36,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final CryptoSecurityService cryptoSecurityService;
     private final TotpService totpService;
+    private final SubscriptionRepository subscriptionRepository;
+    private final PlanRepository planRepository;
 
     @Value("${app.jwt.refresh-expiration}")
     private long refreshTokenExpiration;
@@ -127,6 +134,12 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        if (request.getName() != null) {
+            user.setName(request.getName().trim());
+        }
+        if (request.getAvatarUrl() != null) {
+            user.setAvatarUrl(request.getAvatarUrl().trim());
+        }
         if (request.getPrivacyModeEnabled() != null) {
             user.setPrivacyModeEnabled(request.getPrivacyModeEnabled());
         }
@@ -244,9 +257,33 @@ public class AuthService {
         profile.setPaperStartingBalance(user.getPaperStartingBalance());
         profile.setPaperCashBalance(user.getPaperCashBalance());
         profile.setWalletAddress(user.getWalletAddress());
+        profile.setWalletVerified(user.isWalletVerified());
+        profile.setWalletChainId(user.getWalletChainId());
         profile.setEmailVerified(user.isEmailVerified());
         profile.setWatchlistCount(user.getWatchlist() == null ? 0 : user.getWatchlist().size());
         profile.setAlertCount(user.getAlerts() == null ? 0 : user.getAlerts().size());
+
+        // Billing / Plan information mapping
+        Optional<Subscription> subOpt = subscriptionRepository.findByUserId(user.getId());
+        if (subOpt.isPresent()) {
+            Subscription sub = subOpt.get();
+            profile.setSubscriptionStatus(sub.getStatus());
+            if (sub.getCurrentPeriodEnd() != null) {
+                profile.setSubscriptionPeriodEnd(sub.getCurrentPeriodEnd().getEpochSecond());
+            }
+            if ("active".equals(sub.getStatus()) || "trialing".equals(sub.getStatus())) {
+                profile.setPlanId(sub.getPlanId());
+                planRepository.findById(sub.getPlanId()).ifPresent(p -> profile.setPlanName(p.getName()));
+            } else {
+                profile.setPlanId("free");
+                profile.setPlanName("FREE");
+            }
+        } else {
+            profile.setPlanId("free");
+            profile.setPlanName("FREE");
+            profile.setSubscriptionStatus("none");
+        }
+
         return profile;
     }
 

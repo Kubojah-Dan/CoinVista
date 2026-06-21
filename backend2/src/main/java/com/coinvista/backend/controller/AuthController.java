@@ -3,7 +3,9 @@ package com.coinvista.backend.controller;
 import com.coinvista.backend.dto.AuthDto;
 import com.coinvista.backend.model.User;
 import com.coinvista.backend.service.AuthService;
+import com.coinvista.backend.service.GamificationService;
 import com.coinvista.backend.service.OAuthService;
+import com.coinvista.backend.service.SiweService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -27,6 +29,8 @@ public class AuthController {
 
     private final AuthService authService;
     private final OAuthService oAuthService;
+    private final SiweService siweService;
+    private final GamificationService gamificationService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthDto.AuthResponse> register(
@@ -112,6 +116,44 @@ public class AuthController {
     @GetMapping("/oauth/{provider}/start")
     public void startOAuth(@PathVariable String provider, HttpServletResponse response) throws java.io.IOException {
         oAuthService.start(provider, response);
+    }
+
+    // ── SIWE endpoints ─────────────────────────────────────────────────────────
+
+    /**
+     * GET /api/auth/siwe/nonce
+     * Returns a single-use nonce for the authenticated user.
+     * The frontend includes this nonce in the SIWE message before signing.
+     */
+    @GetMapping("/siwe/nonce")
+    public ResponseEntity<AuthDto.SiweNonceResponse> getSiweNonce(@AuthenticationPrincipal User user) {
+        String nonce = siweService.generateNonce(user.getId());
+        AuthDto.SiweNonceResponse response = new AuthDto.SiweNonceResponse();
+        response.setNonce(nonce);
+        response.setIssuedAt(java.time.Instant.now().toString());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * POST /api/auth/siwe/verify
+     * Verifies the SIWE signature and links the wallet address to the authenticated user.
+     * On success, returns the updated UserProfile with walletVerified=true.
+     */
+    @PostMapping("/siwe/verify")
+    public ResponseEntity<AuthDto.UserProfile> verifySiwe(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody AuthDto.SiweVerifyRequest request) {
+        User updatedUser = siweService.verifyAndLink(
+                user.getId(),
+                request.getMessage(),
+                request.getSignature()
+        );
+        try {
+            gamificationService.awardSIWEXP(user.getId());
+        } catch (Exception e) {
+            // Ignore gamification failures to ensure SIWE verification succeeds
+        }
+        return ResponseEntity.ok(authService.getProfile(updatedUser));
     }
 
     @GetMapping("/oauth/{provider}/callback")

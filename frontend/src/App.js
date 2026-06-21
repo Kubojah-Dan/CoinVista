@@ -1,8 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { Web3Providers } from './web3/providers';
 import Navbar from './components/layout/Navbar';
 import BottomNav from './components/BottomNav';
 import Home from './pages/Home';
@@ -15,6 +16,8 @@ import Settings from './pages/Settings';
 import Trending from './pages/Trending';
 import Watchlist from './pages/Watchlist';
 import CoinDetail from './pages/CoinDetail';
+import Pricing from './pages/Pricing';
+import StrategyBuilder from './pages/StrategyBuilder';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import AgentChat from './components/AgentChat';
@@ -87,6 +90,26 @@ function AppShell() {
                         }
                     />
                     <Route
+                        path="/pricing"
+                        element={
+                            <ProtectedRoute>
+                                <div className="px-3 py-4 md:container md:mx-auto md:px-4 md:py-8">
+                                    <Pricing />
+                                </div>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/strategy-builder"
+                        element={
+                            <ProtectedRoute>
+                                <div className="px-3 py-4 md:container md:mx-auto md:px-4 md:py-8">
+                                    <StrategyBuilder />
+                                </div>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
                         path="/trending"
                         element={
                             <ProtectedRoute>
@@ -128,11 +151,13 @@ function AppShell() {
 function App() {
     return (
         <ThemeProvider>
-            <AuthProvider>
-                <Router>
-                    <AppShell />
-                </Router>
-            </AuthProvider>
+            <Web3Providers>
+                <AuthProvider>
+                    <Router>
+                        <AppShell />
+                    </Router>
+                </AuthProvider>
+            </Web3Providers>
         </ThemeProvider>
     );
 }

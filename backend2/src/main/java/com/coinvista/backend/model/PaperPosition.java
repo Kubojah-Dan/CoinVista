@@ -33,5 +33,11 @@ public class PaperPosition {
 
     private String strategy;
 
+    private String preTradeThesis;
+
+    private String preTradeInvalidation;
+
+    private Double preTradeRnR;
+
     private Instant openedAt = Instant.now();
 }
