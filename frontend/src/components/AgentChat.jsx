@@ -17,6 +17,23 @@ const AgentChat = () => {
   const [activeTool, setActiveTool] = useState('');
   const chatEndRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  // Auto-resize textarea height as text grows (like WhatsApp)
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(120, textareaRef.current.scrollHeight)}px`;
+    }
+  }, [input]);
+
+  // Handle Enter key for sending (Shift+Enter for new line)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(e);
+    }
+  };
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -332,14 +349,16 @@ const AgentChat = () => {
           )}
 
           {/* Input Footer */}
-          <form onSubmit={handleSend} className="p-3 bg-white/70 dark:bg-dark-100/70 backdrop-blur-md border-t border-base-200/30 flex gap-2 shrink-0">
-            <input
-              type="text"
+          <form onSubmit={handleSend} className="p-3 bg-white/70 dark:bg-dark-100/70 backdrop-blur-md border-t border-base-200/30 flex gap-2 shrink-0 items-end">
+            <textarea
+              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder={isLoading ? "Agent is running tools..." : "Ask the AI agent..."}
               disabled={isLoading}
-              className="input input-bordered input-sm flex-1 focus:input-primary text-sm dark:bg-dark-200"
+              rows={1}
+              className="textarea textarea-bordered textarea-sm flex-1 focus:textarea-primary text-sm dark:bg-dark-200 resize-none py-2 px-3 max-h-32 overflow-y-auto leading-normal"
             />
             {isLoading ? (
               <button
