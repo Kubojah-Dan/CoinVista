@@ -89,3 +89,11 @@ code {
 .animate-marquee-slow:hover {
     animation-play-state: paused;
 }
+
+@layer utilities {
+    .landing-grid { background-image: linear-gradient(rgba(148, 163, 184, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, .07) 1px, transparent 1px); background-size: 46px 46px; mask-image: linear-gradient(to bottom, black, transparent 82%); }
+    .crypto-art-frame::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 50px rgba(96, 165, 250, .18); pointer-events: none; }
+    .crypto-token { position: absolute; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; min-width: 142px; padding: .65rem .75rem; border: 1px solid rgba(255,255,255,.17); border-radius: .9rem; background: rgba(8, 15, 35, .74); box-shadow: 0 16px 35px rgba(0,0,0,.28); backdrop-filter: blur(14px); }
+    .crypto-token--btc { top: 12%; left: -8%; } .crypto-token--eth { top: 43%; right: -10%; } .crypto-token--sol { bottom: 9%; left: -10%; }
+    @media (max-width: 640px) { .crypto-token { transform: scale(.78); } .crypto-token--btc { left: -10%; } .crypto-token--eth { right: -13%; } .crypto-token--sol { left: -11%; } }
+}
