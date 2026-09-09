@@ -16,17 +16,18 @@ const Home = () => {
     return (
         <div className="relative min-h-screen overflow-hidden bg-cover bg-fixed bg-center bg-no-repeat transition-all duration-700" style={{ backgroundImage: `linear-gradient(var(--home-overlay), var(--home-overlay)), var(--home-bg-image)` }}>
             {/* Decorative cryptocurrency art: intentionally subtle so the existing design remains unchanged. */}
-            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-                <motion.img src={cryptoOrbit} alt="" animate={{ y: [0, -18, 0], rotate: [-4, 2, -4] }} transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }} className="crypto-side-art crypto-side-art--left" />
-                <motion.img src={cryptoOrbit} alt="" animate={{ y: [0, 22, 0], rotate: [5, -2, 5] }} transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }} className="crypto-side-art crypto-side-art--right" />
-            </div>
-
             {/* Hero Section */}
             <section className="container relative z-10 mx-auto px-6 py-20 text-center">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                     <h1 className="mb-6 text-5xl font-bold text-gray-900 dark:text-gray-100 md:text-7xl">Research Crypto<br /><span className="gradient-text">Like a Product Team</span></h1>
                     <p className="mx-auto mb-8 max-w-2xl text-xl text-gray-700 dark:text-gray-400">CoinVista is a full-stack crypto intelligence workspace that combines live markets, portfolio analytics, paper trading, alert automation, and machine-learning-inspired insight panels in one polished project.</p>
-                    <div className="flex items-center justify-center gap-4"><Link to="/signup"><Button className="px-8 py-4 text-lg">Start Tracking Free</Button></Link><Link to="/login"><Button variant="outline" className="bg-white/10 px-8 py-4 text-lg backdrop-blur-md dark:bg-dark-100/10">View Demo</Button></Link></div>
+                    <div className="relative flex items-center justify-center gap-4">
+                        <motion.img src={cryptoOrbit} alt="" aria-hidden="true" animate={{ y: [0, -7, 0], rotate: [-5, 3, -5] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="crypto-button-art crypto-button-art--bitcoin" />
+                        <Link to="/signup" className="relative z-10"><Button className="px-8 py-4 text-lg">Start Tracking Free</Button></Link>
+                        <Link to="/login" className="relative z-10"><Button variant="outline" className="bg-white/10 px-8 py-4 text-lg backdrop-blur-md dark:bg-dark-100/10">View Demo</Button></Link>
+                        <motion.img src={cryptoOrbit} alt="" aria-hidden="true" animate={{ y: [0, 8, 0], rotate: [4, -3, 4] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: .4 }} className="crypto-button-art crypto-button-art--ethereum" />
+                        <motion.img src={cryptoOrbit} alt="" aria-hidden="true" animate={{ y: [0, -5, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: .8 }} className="crypto-button-art crypto-button-art--solana" />
+                    </div>
                 </motion.div>
             </section>
 
