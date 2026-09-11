@@ -342,7 +342,7 @@ if (oauthStatus === 'success') {
                             </button>
                         </form>
 
-                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left text-sm text-slate-200">
+                        <div className="auth-security-note rounded-2xl border border-white/10 bg-white/5 p-4 text-left text-sm text-slate-200">
                             <div className="mb-2 flex items-center gap-2 font-semibold text-white">
                                 <ShieldCheck className="h-4 w-4" />
                                 Secure Session Flow
