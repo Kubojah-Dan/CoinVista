@@ -168,7 +168,7 @@ if (oauthStatus === 'success') {
                 <div className="auth-form-box register-form-box">
                     <div className="auth-card">
                         <div className="auth-eyebrow">Create Account</div>
-                        <h1>Turn market noise into a research workflow.</h1>
+                        <h1>Turn market noise into a<br />research workflow.</h1>
                         <span className="auth-support-copy">Create a CoinVista account to track holdings, alerts, and simulator performance.</span>
 
                         <div className="auth-social-row">
@@ -255,7 +255,7 @@ if (oauthStatus === 'success') {
                 <div className="auth-form-box login-form-box">
                     <div className="auth-card">
                         <div className="auth-eyebrow">Welcome Back</div>
-                        <h1>Reopen your crypto command center.</h1>
+                        <h1>Reopen your crypto<br />command center.</h1>
                         <span className="auth-support-copy">Sign in to continue with portfolio analytics, paper trading, and live alerts.</span>
 
                         <div className="auth-social-row">
