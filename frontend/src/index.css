@@ -90,25 +90,38 @@ code {
     animation-play-state: paused;
 }
 
-.crypto-button-art {
+.animate-market-ticker {
+    animation: market-ticker 28s linear infinite;
+}
+
+.landing-market-strip:hover .animate-market-ticker {
+    animation-play-state: paused;
+}
+
+@keyframes market-ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.crypto-hero-art {
     position: absolute;
-    z-index: 0;
-    width: 7.5rem;
-    height: 7.5rem;
-    object-fit: cover;
-    border-radius: 9999px;
+    width: 13rem;
+    height: 13rem;
+    overflow: hidden;
+    border-radius: 2rem;
     opacity: .72;
-    filter: blur(.65px) saturate(1.1);
+    filter: drop-shadow(0 20px 25px rgba(15, 23, 42, .25)) saturate(1.1);
     mix-blend-mode: screen;
 }
 
-.crypto-button-art--bitcoin { right: calc(50% + 9.5rem); top: -2.15rem; object-position: 25% 18%; }
-.crypto-button-art--ethereum { left: calc(50% + 11rem); top: -1.65rem; object-position: 70% 48%; }
-.crypto-button-art--solana { left: calc(50% + 16.25rem); top: 1.7rem; width: 4.5rem; height: 4.5rem; object-position: 25% 75%; opacity: .55; }
+.crypto-hero-art img { width: 100%; height: 100%; object-fit: cover; }
+.crypto-hero-art--bitcoin { left: -1.5rem; top: -5rem; }
+.crypto-hero-art--bitcoin img { object-position: 23% 15%; }
+.crypto-hero-art--ethereum { right: -1.5rem; top: -3.5rem; }
+.crypto-hero-art--ethereum img { object-position: 76% 43%; }
+.crypto-hero-art--solana { right: 7rem; top: 9.5rem; width: 7.5rem; height: 7.5rem; opacity: .55; }
+.crypto-hero-art--solana img { object-position: 23% 78%; }
 
 @media (max-width: 767px) {
-    .crypto-button-art { width: 4.75rem; height: 4.75rem; opacity: .45; }
-    .crypto-button-art--bitcoin { right: calc(50% + 6.5rem); top: -1.8rem; }
-    .crypto-button-art--ethereum { left: calc(50% + 7rem); top: -1.3rem; }
-    .crypto-button-art--solana { display: none; }
+    .animate-market-ticker { animation-duration: 20s; }
 }
